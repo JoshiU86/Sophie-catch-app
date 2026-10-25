@@ -49,6 +49,8 @@
   }
   .pill:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.2); }
   #streak { font-size: 18px; padding: 10px 14px; }
+  #streak.dim { opacity: .45; }
+  #next.dim { opacity: .45; }
   #gear { font-size: 22px; padding: 12px 15px; opacity: .8; }
   .scene { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; }
   #mon { width: min(70vw, 36vh); height: min(70vw, 36vh); object-fit: contain; animation: float 2.4s ease-in-out infinite; filter: drop-shadow(0 12px 6px rgba(0,0,0,.25)); transition: opacity .3s, transform .4s ease-in; }
@@ -187,7 +189,8 @@
     balls: { poke: Infinity, great: 50, ultra: 25, master: 1, mega: 0 },
     lastDate: new Date().toDateString(),
     streak: 0,
-    giftDate: ''
+    giftDate: '',
+    skips: 0
   };
 
   // Dagelijks bijvullen tot de limiet; verdiende extra ballen blijven behouden.
@@ -313,6 +316,7 @@
     });
     $('btn-ball').className = `ball ball-${selectedBall}`;
     $('thrown').className = `ball ball-${selectedBall}`;
+    updateStreak();
   }
 
   document.querySelectorAll('.ball-opt').forEach(opt => {
@@ -322,6 +326,13 @@
     };
   });
 
+  const MAX_SKIPS = 3; // "Andere Pokémon" mag 3x achter elkaar; een vangst of ontsnapping zet hem terug
+  function updateSkipUI() {
+    const left = Math.max(0, MAX_SKIPS - (S.skips || 0));
+    $('next').textContent = `🔍 Andere Pokémon (${left})`;
+    $('next').classList.toggle('dim', left === 0);
+  }
+  const STREAK_BALLS = ['poke', 'great']; // Super-, Ultra- en Master Balls tellen niet mee (te makkelijk)
   const todayStr = () => new Date().toDateString();
   function updateGift() { $('gift').style.display = S.giftDate === todayStr() ? 'none' : 'inline-block'; }
   function claimGift() { // 1x per dag
@@ -338,7 +349,10 @@
   $('gift').onclick = claimGift; tickTimer(); setInterval(tickTimer, 1000);
 
   const STREAK_GOAL = 5;
-  function updateStreak() { $('streak').textContent = `🔥 ${S.streak || 0}/${STREAK_GOAL}`; }
+  function updateStreak() {
+    $('streak').textContent = `🔥 ${S.streak || 0}/${STREAK_GOAL}`;
+    $('streak').classList.toggle('dim', !STREAK_BALLS.includes(selectedBall)); // gedimd bij een bal die niet meetelt
+  }
   function breakStreak() { if (S.streak) { S.streak = 0; save(); } updateStreak(); }
   function chooseReward() {
     return new Promise(res => {
@@ -349,7 +363,7 @@
   }
 
   async function spawn() {
-    updateBallUI(); updateStreak();
+    updateBallUI(); updateStreak(); updateSkipUI();
     busy = true; $('throw').disabled = true; 
     const mon = $('mon');
     mon.classList.remove('flee');
@@ -387,14 +401,14 @@
     busy = false;
   }
 
-  function getCatchParams() {
+  function getCatchParams(ball) {
     let baseRate = cur.legendary ? 0.35 : 0.65; 
     baseRate += misses * 0.1; 
 
-    if (selectedBall === 'great') baseRate += 0.20;
-    if (selectedBall === 'ultra') baseRate += 0.40;
-    if (selectedBall === 'mega') baseRate += 0.30; // Super Ball: tussen Great (+0.20) en Ultra (+0.40)
-    if (selectedBall === 'master') baseRate = 1.0; 
+    if (ball === 'great') baseRate += 0.20;
+    if (ball === 'ultra') baseRate += 0.40;
+    if (ball === 'mega') baseRate += 0.30; // Super Ball: tussen Great (+0.20) en Ultra (+0.40)
+    if (ball === 'master') baseRate = 1.0; 
 
     const success = Math.random() < Math.min(0.98, baseRate);
     const fleeRate = cur.legendary ? 0.40 : 0.25;
@@ -404,7 +418,8 @@
   }
 
   async function throwBall() {
-    if (busy || !cur) return; 
+    if (busy || !cur) return;
+    const usedBall = selectedBall; // de bal die nu gegooid wordt (selectedBall kan veranderen als hij op is) 
 
     if (S.balls[selectedBall] <= 0 && selectedBall !== 'poke') {
       $('msg').textContent = 'Op voorraad voor vandaag! Kies een andere bal.';
@@ -422,7 +437,7 @@
     $('next').disabled = true;
     
     const ball = $('thrown'), mon = $('mon');
-    const { success, flees } = getCatchParams();
+    const { success, flees } = getCatchParams(usedBall);
 
     sound('throw'); 
     $('msg').textContent = ''; 
@@ -450,8 +465,9 @@
       if (cur.shiny) { if (!c.shiny) c.shinyAt = Date.now(); c.shiny = true; } 
       save(); 
       $('count').textContent = total();
+      S.skips = 0; save(); updateSkipUI(); // vangst: zoeken weer 3x mogelijk
       let reward = false;
-      if (misses === 0) { // gevangen in één worp
+      if (misses === 0 && STREAK_BALLS.includes(usedBall)) { // gevangen in één worp met een gewone bal
         S.streak = (S.streak || 0) + 1;
         if (S.streak >= STREAK_GOAL) { S.streak = 0; reward = true; }
         save(); updateStreak();
@@ -460,6 +476,7 @@
       confetti(); 
       sayMix(['Gevangen!', 'nl-NL'], [cur.name, 'en-US']);
       $('msg').textContent = isNew ? '🎉 Gevangen! Nieuw in je Pokédex!' : '🎉 Gevangen!';
+      if (misses === 0 && !STREAK_BALLS.includes(usedBall)) $('msg').textContent += ' (telt niet mee voor 🔥)';
       await sleep(3200); 
       ball.style.display = 'none'; 
       $('next').disabled = false; 
@@ -469,7 +486,8 @@
       sound('miss'); 
       ball.style.display = 'none'; 
       mon.style.opacity = 1; 
-      breakStreak();
+      S.skips = 0; save(); updateSkipUI(); // ontsnapt: zoeken weer 3x mogelijk
+      if (STREAK_BALLS.includes(usedBall)) breakStreak();
       $('msg').textContent = 'Oh nee! Hij is uit de bal gekomen...';
       await sleep(1000);
       
@@ -485,7 +503,7 @@
       sound('miss'); 
       ball.style.display = 'none'; 
       mon.style.opacity = 1; 
-      misses++; breakStreak();
+      misses++; if (STREAK_BALLS.includes(usedBall)) breakStreak();
       $('msg').textContent = 'Oei, hij is ontsnapt! Probeer opnieuw! 💪'; 
       $('throw').disabled = false; 
       $('next').disabled = false; 
@@ -590,11 +608,13 @@
   };
 
   $('throw').onclick = throwBall;
-  $('next').onclick = () => { 
-    if (!busy || !cur) { 
-      try { speechSynthesis.cancel(); } catch {} 
-      spawn(); 
-    } 
+  $('next').onclick = () => {
+    if (busy && cur) return;
+    if (!cur) { spawn(); return; } // geen internet eerder: opnieuw proberen telt niet mee
+    if ((S.skips || 0) >= MAX_SKIPS) { $('msg').textContent = 'Je hebt 3 keer gezocht. Probeer deze Pokémon te vangen! 💪'; return; }
+    S.skips = (S.skips || 0) + 1; save(); updateSkipUI();
+    try { speechSynthesis.cancel(); } catch {}
+    spawn();
   };
 
   $('count').textContent = total(); 
