@@ -134,8 +134,8 @@
     <div class="ball-selector" id="b-select">
       <div class="ball-opt active" data-ball="poke"><div class="ball ball-poke"></div><span class="ball-badge" id="b-poke-badge">∞</span></div>
       <div class="ball-opt" data-ball="great"><div class="ball ball-great"></div><span class="ball-badge" id="b-great-badge">50</span></div>
-      <div class="ball-opt" data-ball="ultra"><div class="ball ball-ultra"></div><span class="ball-badge" id="b-ultra-badge">25</span></div>
       <div class="ball-opt" data-ball="mega"><div class="ball ball-mega"></div><span class="ball-badge" id="b-mega-badge">0</span></div>
+      <div class="ball-opt" data-ball="ultra"><div class="ball ball-ultra"></div><span class="ball-badge" id="b-ultra-badge">25</span></div>
       <div class="ball-opt" data-ball="master"><div class="ball ball-master"></div><span class="ball-badge" id="b-master-badge">1</span></div>
     </div>
     <div id="reset-timer"></div>
@@ -242,12 +242,21 @@
     } catch {} 
   }
 
-  function say(t) { 
+  // Nederlandse zinnen, maar Pokémon-namen worden Engels uitgesproken.
+  function sayMix(...parts) {
+    if (!S.voice || !('speechSynthesis' in window)) return;
+    try {
+      speechSynthesis.cancel();
+      parts.forEach(([t, l]) => { const u = new SpeechSynthesisUtterance(t); u.lang = l; u.rate = .9; speechSynthesis.speak(u); });
+    } catch {}
+  }
+
+  function say(t, lang = 'nl-NL') { 
     if (!S.voice || !('speechSynthesis' in window)) return; 
     try { 
       speechSynthesis.cancel(); 
       const u = new SpeechSynthesisUtterance(t); 
-      u.lang = 'nl-NL'; 
+      u.lang = lang; 
       u.rate = .9; 
       speechSynthesis.speak(u); 
     } catch {} 
@@ -384,7 +393,7 @@
 
     if (selectedBall === 'great') baseRate += 0.20;
     if (selectedBall === 'ultra') baseRate += 0.40;
-    if (selectedBall === 'mega') baseRate += 0.55;
+    if (selectedBall === 'mega') baseRate += 0.30; // Super Ball: tussen Great (+0.20) en Ultra (+0.40)
     if (selectedBall === 'master') baseRate = 1.0; 
 
     const success = Math.random() < Math.min(0.98, baseRate);
@@ -449,7 +458,7 @@
       }
       sound('win'); 
       confetti(); 
-      say('Gevangen! ' + cur.name);
+      sayMix(['Gevangen!', 'nl-NL'], [cur.name, 'en-US']);
       $('msg').textContent = isNew ? '🎉 Gevangen! Nieuw in je Pokédex!' : '🎉 Gevangen!';
       await sleep(3200); 
       ball.style.display = 'none'; 
@@ -467,7 +476,7 @@
       sound('flee');
       mon.classList.add('flee');
       $('msg').textContent = '💨 ' + cur.name + ' is weggerend!';
-      say(cur.name + ' is weggerend!');
+      sayMix([cur.name, 'en-US'], ['is weggerend!', 'nl-NL']);
       await sleep(2500);
       
       $('next').disabled = false;
@@ -509,9 +518,9 @@
     $('dimg').src = ART + (sh ? 'shiny/' : '') + id + '.png'; 
     $('dname').textContent = d.name; 
     $('dinfo').textContent = `Gevangen: ${d.n}×${d.shiny ? '  ✨' : ''}`;
-    $('say').onclick = () => say(d.name); 
+    $('say').onclick = () => say(d.name, 'en-US'); 
     $('detail').classList.add('on'); 
-    say(d.name); 
+    say(d.name, 'en-US'); 
   };
 
   document.querySelectorAll('.tabs .pill').forEach(b => b.onclick = () => { 
