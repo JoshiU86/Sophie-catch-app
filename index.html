@@ -66,6 +66,9 @@
   .ball-great::before { content: ''; position: absolute; top: 10%; left: 15%; width: 70%; height: 25%; background: #ef4444; border-radius: 10px; }
   .ball-ultra { background: linear-gradient(#eab308 0 44%, #222 44% 56%, #fff 56%); }
   .ball-ultra::before { content: ''; position: absolute; top: 8%; left: 20%; width: 60%; height: 28%; background: #222; border-radius: 4px; }
+  .ball-mega { background: linear-gradient(#ec4899 0 44%, #222 44% 56%, #fff 56%); }
+  .ball-mega::before { content: ''; position: absolute; top: 8%; left: 25%; width: 50%; height: 26%; background: #fce7f3; border-radius: 50%; }
+  #reset-timer { font-size: 13px; font-weight: bold; color: #1e3a8a; background: rgba(255,255,255,.7); border-radius: 99px; padding: 3px 12px; }
   .ball-master { background: linear-gradient(#a855f7 0 44%, #222 44% 56%, #fff 56%); }
   .ball-master::before { content: 'M'; position: absolute; top: 2%; left: 50%; transform: translateX(-50%); color: #fff; font-weight: 900; font-size: 14px; font-family: sans-serif; z-index: 2; }
 
@@ -117,7 +120,7 @@
 <div id="app">
   <div class="top">
     <button class="pill" id="dexbtn">📖 <span id="count">0</span></button>
-    <div class="pill" id="streak">🔥 0/10</div>
+    <div class="pill" id="streak">🔥 0/5</div>
     <button class="pill" id="gear">⚙️</button>
   </div>
   <div class="scene">
@@ -127,12 +130,15 @@
     <div id="msg"></div>
   </div>
   <div class="bottom">
+    <button class="pill" id="gift" style="display:none;font-size:18px;padding:10px 18px">🎁 Cadeau: 10 Super Balls!</button>
     <div class="ball-selector" id="b-select">
       <div class="ball-opt active" data-ball="poke"><div class="ball ball-poke"></div><span class="ball-badge" id="b-poke-badge">∞</span></div>
       <div class="ball-opt" data-ball="great"><div class="ball ball-great"></div><span class="ball-badge" id="b-great-badge">50</span></div>
       <div class="ball-opt" data-ball="ultra"><div class="ball ball-ultra"></div><span class="ball-badge" id="b-ultra-badge">25</span></div>
+      <div class="ball-opt" data-ball="mega"><div class="ball ball-mega"></div><span class="ball-badge" id="b-mega-badge">0</span></div>
       <div class="ball-opt" data-ball="master"><div class="ball ball-master"></div><span class="ball-badge" id="b-master-badge">1</span></div>
     </div>
+    <div id="reset-timer"></div>
     <button id="throw"><span class="ball ball-poke" id="btn-ball"></span> Gooi!</button>
     <button class="pill" id="next">🔍 Andere Pokémon</button>
   </div>
@@ -149,7 +155,7 @@
   <p><button class="pill" id="say">🔊</button> <button class="pill" id="dclose">OK</button></p></div></div>
 
 <div class="layer big" id="reward"><div class="box">
-  <h3>🔥 10 op een rij!</h3><p style="font-size:20px;margin:6px 0 12px">Kies je beloning:</p>
+  <h3>🔥 5 op een rij!</h3><p style="font-size:20px;margin:6px 0 12px">Kies je beloning:</p>
   <button class="pill" id="r-great" style="margin:6px"><span class="ball ball-great" style="--s:34px;vertical-align:middle"></span> 25 Great Balls</button><br>
   <button class="pill" id="r-ultra" style="margin:6px"><span class="ball ball-ultra" style="--s:34px;vertical-align:middle"></span> 10 Ultra Balls</button>
 </div></div>
@@ -178,13 +184,14 @@
     size: 151, 
     sound: true, 
     voice: true, 
-    balls: { poke: Infinity, great: 50, ultra: 25, master: 1 },
+    balls: { poke: Infinity, great: 50, ultra: 25, master: 1, mega: 0 },
     lastDate: new Date().toDateString(),
-    streak: 0
+    streak: 0,
+    giftDate: ''
   };
 
   // Dagelijks bijvullen tot de limiet; verdiende extra ballen blijven behouden.
-  const refill = b => { const o = { ...b, poke: Infinity }; ['great', 'ultra', 'master'].forEach(k => o[k] = Math.max(+b[k] || 0, LIMITS[k])); return o; };
+  const refill = b => { const o = { ...b, poke: Infinity }; ['great', 'ultra', 'master'].forEach(k => o[k] = Math.max(+b[k] || 0, LIMITS[k])); o.mega = +b.mega || 0; return o; }; // mega-ballen worden niet bijgevuld, wel bewaard
   const fresh = () => ({ ...def, balls: { ...def.balls }, caught: {} });
 
   let S = (() => { 
@@ -269,7 +276,10 @@
     $('b-poke-badge').textContent = '∞';
     $('b-great-badge').textContent = S.balls.great;
     $('b-ultra-badge').textContent = S.balls.ultra;
+    S.balls.mega = +S.balls.mega || 0;
     $('b-master-badge').textContent = S.balls.master;
+    $('b-mega-badge').textContent = S.balls.mega;
+    updateGift();
 
     document.querySelectorAll('.ball-opt').forEach(opt => {
       const bType = opt.dataset.ball;
@@ -303,12 +313,27 @@
     };
   });
 
-  const STREAK_GOAL = 10;
+  const todayStr = () => new Date().toDateString();
+  function updateGift() { $('gift').style.display = S.giftDate === todayStr() ? 'none' : 'inline-block'; }
+  function claimGift() { // 1x per dag
+    if (S.giftDate === todayStr()) return;
+    S.giftDate = todayStr(); S.balls.mega = (+S.balls.mega || 0) + 10; save(); updateBallUI();
+    confetti(); sound('win'); $('msg').textContent = '🎁 10 Super Balls erbij!';
+  }
+  function tickTimer() { // aftellen tot middernacht, dan worden de ballen bijgevuld en is het cadeau er weer
+    const n = new Date(), m = new Date(n); m.setHours(24, 0, 0, 0);
+    const t = Math.max(0, Math.floor((m - n) / 1000)), p = x => String(x).padStart(2, '0');
+    $('reset-timer').textContent = `🔄 Nieuwe ballen over ${Math.floor(t / 3600)}:${p(Math.floor(t % 3600 / 60))}:${p(t % 60)}`;
+    if (S.lastDate !== todayStr()) updateBallUI();
+  }
+  $('gift').onclick = claimGift; tickTimer(); setInterval(tickTimer, 1000);
+
+  const STREAK_GOAL = 5;
   function updateStreak() { $('streak').textContent = `🔥 ${S.streak || 0}/${STREAK_GOAL}`; }
   function breakStreak() { if (S.streak) { S.streak = 0; save(); } updateStreak(); }
   function chooseReward() {
     return new Promise(res => {
-      $('reward').classList.add('on'); say('Tien op een rij! Kies je beloning!');
+      $('reward').classList.add('on'); say('Vijf op een rij! Kies je beloning!');
       const pick = k => { S.balls[k] = (S.balls[k] || 0) + (k === 'great' ? 25 : 10); save(); updateBallUI(); $('reward').classList.remove('on'); res(); };
       $('r-great').onclick = () => pick('great'); $('r-ultra').onclick = () => pick('ultra');
     });
@@ -359,6 +384,7 @@
 
     if (selectedBall === 'great') baseRate += 0.20;
     if (selectedBall === 'ultra') baseRate += 0.40;
+    if (selectedBall === 'mega') baseRate += 0.55;
     if (selectedBall === 'master') baseRate = 1.0; 
 
     const success = Math.random() < Math.min(0.98, baseRate);
