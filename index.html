@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pokémon vangen">
+<meta name="theme-color" content="#7dd3fc">
+<title>Pokémon vangen</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='30' fill='%23e53935' stroke='%23222' stroke-width='4'/><rect y='30' width='64' height='5' fill='%23222'/><circle cx='32' cy='32' r='9' fill='%23fff' stroke='%23222' stroke-width='4'/></svg>">
+<style>
+  * { 
+    box-sizing: border-box; 
+    -webkit-tap-highlight-color: transparent; 
+    touch-action: manipulation; 
+    user-select: none; 
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+  html, body { 
+    margin: 0; 
+    height: 100%; 
+    width: 100%;
+    font-family: 'Trebuchet MS', 'Comic Sans MS', system-ui, -apple-system, sans-serif; 
+    overflow: hidden; 
+    position: fixed;
+  }
+  body { 
+    background: linear-gradient(#7dd3fc 0 55%, #86efac 55%); 
+    padding-top: env(safe-area-inset-top);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+  }
+  #app { height: 100%; display: flex; flex-direction: column; }
+  .top { display: flex; justify-content: space-between; align-items: center; padding: 12px; z-index: 10; }
+  .pill { 
+    border: 0; 
+    border-radius: 999px; 
+    padding: 12px 18px; 
+    font-size: 20px; 
+    font-weight: bold; 
+    background: #fff; 
+    color: #1e3a8a; 
+    box-shadow: 0 4px 0 rgba(0,0,0,.2); 
+    cursor: pointer;
+  }
+  .pill:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.2); }
+  #gear { font-size: 22px; padding: 12px 15px; opacity: .8; }
+  .scene { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; }
+  #mon { width: min(70vw, 36vh); height: min(70vw, 36vh); object-fit: contain; animation: float 2.4s ease-in-out infinite; filter: drop-shadow(0 12px 6px rgba(0,0,0,.25)); transition: opacity .3s, transform .4s ease-in; }
+  #mon.flee { transform: translateX(120vw) scale(0.6); opacity: 0 !important; }
+  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+  #name { font-size: 32px; font-weight: bold; color: #1e3a8a; text-shadow: 0 2px 0 #fff; margin-top: 4px; text-align: center; min-height: 40px; }
+  #msg { font-size: 20px; font-weight: bold; color: #7c2d12; background: rgba(255,255,255,.85); border-radius: 18px; padding: 8px 16px; margin-top: 4px; min-height: 42px; text-align: center; }
+  
+  /* Pokéball styling */
+  .ball { width: var(--s, 80px); height: var(--s, 80px); border-radius: 50%; border: 4px solid #222; position: relative; flex: none; display: inline-block; }
+  .ball::after { content: ''; position: absolute; left: 50%; top: 50%; width: 30%; height: 30%; transform: translate(-50%,-50%); border-radius: 50%; background: #fff; border: 3px solid #222; }
+  
+  .ball-poke { background: linear-gradient(#e53935 0 44%, #222 44% 56%, #fff 56%); }
+  .ball-great { background: linear-gradient(#2563eb 0 44%, #222 44% 56%, #fff 56%); }
+  .ball-great::before { content: ''; position: absolute; top: 10%; left: 15%; width: 70%; height: 25%; background: #ef4444; border-radius: 10px; }
+  .ball-ultra { background: linear-gradient(#eab308 0 44%, #222 44% 56%, #fff 56%); }
+  .ball-ultra::before { content: ''; position: absolute; top: 8%; left: 20%; width: 60%; height: 28%; background: #222; border-radius: 4px; }
+  .ball-master { background: linear-gradient(#a855f7 0 44%, #222 44% 56%, #fff 56%); }
+  .ball-master::before { content: 'M'; position: absolute; top: 2%; left: 50%; transform: translateX(-50%); color: #fff; font-weight: 900; font-size: 14px; font-family: sans-serif; z-index: 2; }
+
+  #thrown { --s: 70px; position: absolute; left: 50%; top: 50%; margin: -35px 0 0 -35px; display: none; z-index: 5; }
+  .fly { display: block !important; animation: fly .8s ease-out forwards; }
+  @keyframes fly { 0% { transform: translate(0, 32vh) scale(.5) rotate(0); } 60% { transform: translate(0, -6vh) scale(1.1) rotate(540deg); } 100% { transform: translate(0, 0) scale(.9) rotate(720deg); } }
+  .wig { animation: wig .6s ease-in-out; }
+  @keyframes wig { 0%,100% { transform: rotate(0); } 20% { transform: rotate(-30deg); } 45% { transform: rotate(0); } 65% { transform: rotate(30deg); } 85% { transform: rotate(0); } }
+  
+  .bottom { padding: 8px 16px 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  
+  /* Ball Selector Bar */
+  .ball-selector { display: flex; justify-content: center; gap: 8px; background: rgba(255,255,255,.85); padding: 8px 12px; border-radius: 999px; box-shadow: 0 3px 0 rgba(0,0,0,.15); }
+  .ball-opt { border: 3px solid transparent; border-radius: 50%; padding: 2px; cursor: pointer; transition: transform .15s, border-color .15s; position: relative; }
+  .ball-opt.active { border-color: #fbbf24; transform: scale(1.12); }
+  .ball-opt.depleted { opacity: 0.4; filter: grayscale(100%); }
+  .ball-opt .ball { --s: 38px; }
+  .ball-badge { position: absolute; bottom: -6px; right: -8px; background: #1e3a8a; color: #fff; font-size: 10px; font-weight: bold; border-radius: 99px; padding: 1px 5px; white-space: nowrap; }
+
+  #throw { --s: 34px; display: flex; align-items: center; justify-content: center; gap: 14px; width: 100%; max-width: 380px; border: 0; border-radius: 999px; padding: 14px;
+    font-size: 26px; font-weight: bold; color: #fff; background: #ef4444; box-shadow: 0 6px 0 #991b1b; cursor: pointer; }
+  #throw:active { transform: translateY(4px); box-shadow: 0 2px 0 #991b1b; }
+  #throw:disabled { opacity: .5; pointer-events: none; }
+  #next { font-size: 17px; padding: 8px 16px; }
+  .star { position: fixed; top: -40px; font-size: 30px; z-index: 50; pointer-events: none; animation: fall 2.2s ease-in forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(360deg); opacity: .8; } }
+
+  /* Pokédex & Menu Layer */
+  .layer { position: fixed; inset: 0; background: #fef9c3; z-index: 20; display: none; flex-direction: column; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+  .layer.on { display: flex; }
+  .bar { display: flex; align-items: center; gap: 10px; padding: 12px; flex-wrap: wrap; }
+  .bar h2 { margin: 0; flex: 1; color: #1e3a8a; font-size: 24px; }
+  .tabs { display: flex; gap: 8px; padding: 0 12px 8px; }
+  .tabs .pill { font-size: 16px; padding: 8px 14px; } .tabs .on { background: #fbbf24; }
+  #prog { height: 14px; margin: 0 12px 10px; background: #fde68a; border-radius: 99px; overflow: hidden; }
+  #prog i { display: block; height: 100%; background: #22c55e; width: 0; transition: width .5s; }
+  #grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 0 12px 20px; align-content: start; -webkit-overflow-scrolling: touch; }
+  .card { background: #fff; border-radius: 16px; padding: 6px; text-align: center; box-shadow: 0 3px 0 rgba(0,0,0,.12); font-size: 13px; font-weight: bold; color: #1e3a8a; cursor: pointer; }
+  .card img { width: 100%; aspect-ratio: 1; object-fit: contain; display: block; }
+  .card.no img { filter: brightness(0); opacity: .15; } .card.no { color: #9ca3af; }
+  .big { align-items: center; justify-content: center; text-align: center; background: rgba(0,0,0,.6); }
+  .big .box { background: #fff; border-radius: 28px; padding: 20px; width: min(86vw, 360px); }
+  .big img { width: 70%; } .big h3 { font-size: 32px; margin: 6px 0; color: #1e3a8a; }
+  .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 16px; background: #fff; margin: 6px 12px; border-radius: 14px; font-size: 18px; }
+  .row button { font-size: 16px; padding: 8px 14px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top">
+    <button class="pill" id="dexbtn">📖 <span id="count">0</span></button>
+    <button class="pill" id="gear">⚙️</button>
+  </div>
+  <div class="scene">
+    <img id="mon" alt="">
+    <div class="ball ball-poke" id="thrown"></div>
+    <div id="name"></div>
+    <div id="msg"></div>
+  </div>
+  <div class="bottom">
+    <div class="ball-selector" id="b-select">
+      <div class="ball-opt active" data-ball="poke"><div class="ball ball-poke"></div><span class="ball-badge" id="b-poke-badge">∞</span></div>
+      <div class="ball-opt" data-ball="great"><div class="ball ball-great"></div><span class="ball-badge" id="b-great-badge">50</span></div>
+      <div class="ball-opt" data-ball="ultra"><div class="ball ball-ultra"></div><span class="ball-badge" id="b-ultra-badge">25</span></div>
+      <div class="ball-opt" data-ball="master"><div class="ball ball-master"></div><span class="ball-badge" id="b-master-badge">1</span></div>
+    </div>
+    <button id="throw"><span class="ball ball-poke" id="btn-ball"></span> Gooi!</button>
+    <button class="pill" id="next">🔍 Andere Pokémon</button>
+  </div>
+</div>
+
+<div class="layer" id="dex">
+  <div class="bar"><h2>Mijn Pokédex <span id="dcount"></span></h2><button class="pill" id="dexclose">✖</button></div>
+  <div id="prog"><i></i></div>
+  <div class="tabs"><button class="pill on" data-t="all">Alle</button><button class="pill" data-t="shiny">✨ Glitter</button></div>
+  <div id="grid"></div>
+</div>
+
+<div class="layer big" id="detail"><div class="box"><img id="dimg" alt=""><h3 id="dname"></h3><div id="dinfo"></div>
+  <p><button class="pill" id="say">🔊</button> <button class="pill" id="dclose">OK</button></p></div></div>
+
+<div class="layer" id="parent" style="background:#f3f4f6">
+  <div class="bar"><h2>Voor ouders</h2><button class="pill" id="pclose">✖</button></div>
+  <div class="row">Geluid <button class="pill" id="p-sound"></button></div>
+  <div class="row">Stem (leest namen voor) <button class="pill" id="p-voice"></button></div>
+  <div class="row">Aantal Pokémon <select id="p-size" style="font-size:18px"><option value="151">151 (Kanto)</option><option value="251">251</option><option value="386">386</option><option value="1025">1025 (alles)</option></select></div>
+  <div class="row">Back-up <span><button class="pill" id="p-export">Kopieer</button> <button class="pill" id="p-import">Plak</button></span></div>
+  <div class="row">Alles wissen <button class="pill" id="p-reset">Wissen</button></div>
+  <p style="padding:0 18px;color:#6b7280;font-size:14px">De voortgang staat alleen op dit apparaat. Er worden geen gegevens verzameld; alleen plaatjes en namen worden bij PokéAPI opgehaald.</p>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const K = 'pkmnKids', API = 'https://pokeapi.co/api/v2/', ART = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
+  const SHINY = 0.05; 
+
+  // Aangepaste dagelijkse limieten (50 Great, 25 Ultra)
+  const LIMITS = { poke: Infinity, great: 50, ultra: 25, master: 1 };
+
+  const def = { 
+    caught: {}, 
+    size: 151, 
+    sound: true, 
+    voice: true, 
+    balls: { poke: Infinity, great: 50, ultra: 25, master: 1 },
+    lastDate: new Date().toDateString()
+  };
+
+  let S = (() => { 
+    try { 
+      let data = { ...def, ...JSON.parse(localStorage.getItem(K)) };
+      let today = new Date().toDateString();
+      if (data.lastDate !== today) {
+        data.balls = { ...LIMITS };
+        data.lastDate = today;
+      }
+      return data;
+    } catch { 
+      return { ...def }; 
+    } 
+  })();
+
+  const save = () => { try { localStorage.setItem(K, JSON.stringify(S)); } catch {} };
+  let cur = null, busy = false, misses = 0, tab = 'all', selectedBall = 'poke';
+  const cap = n => n.replace(/-/g, ' ').replace(/\b\w/g, m => m.toUpperCase());
+  const total = () => Object.keys(S.caught).filter(id => +id <= S.size).length;
+
+  let ac = null;
+  function initAudio() {
+    if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+    if (ac.state === 'suspended') ac.resume();
+  }
+  window.addEventListener('pointerdown', initAudio, { once: true });
+  window.addEventListener('touchstart', initAudio, { once: true });
+
+  function tone(t, f0, f1, t0, d, v) { 
+    if (!ac) initAudio();
+    try {
+      const o = ac.createOscillator(), g = ac.createGain(), s = ac.currentTime + t0;
+      o.type = t; o.frequency.setValueAtTime(f0, s); if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, s + d);
+      g.gain.setValueAtTime(v, s); g.gain.exponentialRampToValueAtTime(.01, s + d); o.connect(g); g.connect(ac.destination); o.start(s); o.stop(s + d); 
+    } catch {}
+  }
+  
+  function sound(k) { 
+    if (!S.sound) return; 
+    try { 
+      initAudio();
+      if (k === 'throw') tone('sine', 400, 90, 0, .3, .25); 
+      else if (k === 'wig') tone('triangle', 200, 300, 0, .12, .3);
+      else if (k === 'win') [523, 659, 784, 1047].forEach((f, i) => tone('triangle', f, f, i * .12, .3, .25)); 
+      else if (k === 'miss') tone('sine', 350, 180, 0, .35, .25); 
+      else if (k === 'flee') tone('sawtooth', 300, 100, 0, .4, .25);
+    } catch {} 
+  }
+
+  function say(t) { 
+    if (!S.voice || !('speechSynthesis' in window)) return; 
+    try { 
+      speechSynthesis.cancel(); 
+      const u = new SpeechSynthesisUtterance(t); 
+      u.lang = 'nl-NL'; 
+      u.rate = .9; 
+      speechSynthesis.speak(u); 
+    } catch {} 
+  }
+
+  function confetti() { 
+    for (let i = 0; i < 26; i++) { 
+      const s = document.createElement('div'); 
+      s.className = 'star'; 
+      s.textContent = ['⭐', '✨', '🎉', '💛'][i % 4];
+      s.style.left = Math.random() * 95 + 'vw'; 
+      s.style.animationDelay = Math.random() * .6 + 's'; 
+      document.body.append(s); 
+      setTimeout(() => s.remove(), 3200); 
+    } 
+  }
+
+  function updateBallUI() {
+    let today = new Date().toDateString();
+    if (S.lastDate !== today) {
+      S.balls = { ...LIMITS };
+      S.lastDate = today;
+      save();
+    }
+
+    $('b-poke-badge').textContent = '∞';
+    $('b-great-badge').textContent = S.balls.great;
+    $('b-ultra-badge').textContent = S.balls.ultra;
+    $('b-master-badge').textContent = S.balls.master;
+
+    document.querySelectorAll('.ball-opt').forEach(opt => {
+      const bType = opt.dataset.ball;
+      const count = S.balls[bType];
+      if (count <= 0) {
+        opt.classList.add('depleted');
+      } else {
+        opt.classList.remove('depleted');
+      }
+    });
+
+    if (S.balls[selectedBall] <= 0 && selectedBall !== 'poke') {
+      selectBall('poke');
+    }
+  }
+
+  function selectBall(bType) {
+    if (S.balls[bType] <= 0 && bType !== 'poke') return;
+    selectedBall = bType;
+    document.querySelectorAll('.ball-opt').forEach(x => {
+      x.classList.toggle('active', x.dataset.ball === bType);
+    });
+    $('btn-ball').className = `ball ball-${selectedBall}`;
+    $('thrown').className = `ball ball-${selectedBall}`;
+  }
+
+  document.querySelectorAll('.ball-opt').forEach(opt => {
+    opt.onclick = () => {
+      if (busy) return;
+      selectBall(opt.dataset.ball);
+    };
+  });
+
+  async function spawn() {
+    updateBallUI();
+    busy = true; $('throw').disabled = true; 
+    const mon = $('mon');
+    mon.classList.remove('flee');
+    mon.style.opacity = 0; 
+    $('name').textContent = ''; 
+    $('msg').textContent = '…';
+    
+    const id = Math.ceil(Math.random() * S.size), shiny = Math.random() < SHINY;
+    try {
+      const [p, sp] = await Promise.all([
+        fetch(API + 'pokemon/' + id).then(r => r.json()), 
+        fetch(API + 'pokemon-species/' + id).then(r => r.json()).catch(() => ({}))
+      ]);
+      cur = { 
+        id, 
+        shiny, 
+        name: cap(p.name), 
+        legendary: !!(sp.is_legendary || sp.is_mythical),
+        img: ART + (shiny ? 'shiny/' : '') + id + '.png', 
+        alt: p.sprites.other?.['official-artwork']?.[shiny ? 'front_shiny' : 'front_default'] || p.sprites.front_default 
+      };
+    } catch { 
+      cur = null; 
+      $('msg').textContent = 'Geen internet 😢 Tik op "Andere Pokémon"'; 
+      busy = false; 
+      return; 
+    }
+    misses = 0;
+    mon.onerror = () => { mon.onerror = null; mon.src = cur.alt; }; 
+    mon.src = cur.img; 
+    mon.onload = () => { mon.style.opacity = 1; };
+    $('name').textContent = (shiny ? '✨ ' : '') + cur.name; 
+    $('msg').textContent = shiny ? 'Wow, een glitter-Pokémon!' : (cur.legendary ? 'Wauw! Een zeldzame Pokémon!' : 'Een wilde Pokémon!');
+    $('throw').disabled = false; 
+    busy = false;
+  }
+
+  function getCatchParams() {
+    let baseRate = cur.legendary ? 0.35 : 0.65; 
+    baseRate += misses * 0.1; 
+
+    if (selectedBall === 'great') baseRate += 0.20;
+    if (selectedBall === 'ultra') baseRate += 0.40;
+    if (selectedBall === 'master') baseRate = 1.0; 
+
+    const success = Math.random() < Math.min(0.98, baseRate);
+    const fleeRate = cur.legendary ? 0.40 : 0.25;
+    const flees = !success && (Math.random() < fleeRate);
+
+    return { success, flees };
+  }
+
+  async function throwBall() {
+    if (busy || !cur) return; 
+
+    if (S.balls[selectedBall] <= 0 && selectedBall !== 'poke') {
+      $('msg').textContent = 'Op voorraad voor vandaag! Kies een andere bal.';
+      return;
+    }
+
+    if (selectedBall !== 'poke') {
+      S.balls[selectedBall]--;
+      save();
+      updateBallUI();
+    }
+
+    busy = true; 
+    $('throw').disabled = true; 
+    $('next').disabled = true;
+    
+    const ball = $('thrown'), mon = $('mon');
+    const { success, flees } = getCatchParams();
+
+    sound('throw'); 
+    $('msg').textContent = ''; 
+    ball.classList.add('fly'); 
+    await sleep(800);
+    
+    mon.style.opacity = 0; 
+    ball.classList.remove('fly'); 
+    ball.style.display = 'block';
+
+    const wiggles = success ? 3 : Math.floor(Math.random() * 2) + 1;
+    for (let i = 0; i < wiggles; i++) { 
+      await sleep(i ? 1000 : 400); 
+      ball.classList.remove('wig'); 
+      void ball.offsetWidth; 
+      ball.classList.add('wig'); 
+      sound('wig'); 
+      $('msg').textContent = '• '.repeat(i + 1); 
+    }
+    await sleep(1100);
+
+    if (success) {
+      const c = S.caught[cur.id] || (S.caught[cur.id] = { n: 0, name: cur.name, shiny: false }), isNew = c.n === 0;
+      c.n++; 
+      if (cur.shiny) c.shiny = true; 
+      save(); 
+      $('count').textContent = total();
+      sound('win'); 
+      confetti(); 
+      say('Gevangen! ' + cur.name);
+      $('msg').textContent = isNew ? '🎉 Gevangen! Nieuw in je Pokédex!' : '🎉 Gevangen!';
+      await sleep(3200); 
+      ball.style.display = 'none'; 
+      $('next').disabled = false; 
+      await spawn();
+    } else if (flees) {
+      sound('miss'); 
+      ball.style.display = 'none'; 
+      mon.style.opacity = 1; 
+      $('msg').textContent = 'Oh nee! Hij is uit de bal gekomen...';
+      await sleep(1000);
+      
+      sound('flee');
+      mon.classList.add('flee');
+      $('msg').textContent = '💨 ' + cur.name + ' is weggerend!';
+      say(cur.name + ' is weggerend!');
+      await sleep(2500);
+      
+      $('next').disabled = false;
+      await spawn();
+    } else {
+      sound('miss'); 
+      ball.style.display = 'none'; 
+      mon.style.opacity = 1; 
+      misses++;
+      $('msg').textContent = 'Oei, hij is ontsnapt! Probeer opnieuw! 💪'; 
+      $('throw').disabled = false; 
+      $('next').disabled = false; 
+      busy = false;
+    }
+  }
+
+  function renderDex() {
+    const n = total(); 
+    $('dcount').textContent = n + '/' + S.size; 
+    $('prog').firstElementChild.style.width = (n / S.size * 100) + '%';
+    let h = '';
+    for (let id = 1; id <= S.size; id++) {
+      const c = S.caught[id], shinyTab = tab === 'shiny';
+      if (shinyTab && !(c && c.shiny)) continue;
+      h += c ? `<div class="card" data-id="${id}"><img loading="lazy" src="${ART}${shinyTab ? 'shiny/' : ''}${id}.png" alt=""><div>${shinyTab || c.shiny ? '✨ ' : ''}${c.name}</div></div>`
+             : `<div class="card no"><img loading="lazy" src="${ART}${id}.png" alt=""><div>${id}</div></div>`;
+    }
+    $('grid').innerHTML = h || '<p style="grid-column:1/-1;text-align:center;font-size:20px;color:#6b7280">Nog geen glitter-Pokémon…<br>Blijf vangen! ✨</p>';
+  }
+
+  $('grid').onclick = e => { 
+    const c = e.target.closest('.card[data-id]'); 
+    if (!c) return; 
+    const id = c.dataset.id, d = S.caught[id], sh = tab === 'shiny';
+    $('dimg').src = ART + (sh ? 'shiny/' : '') + id + '.png'; 
+    $('dname').textContent = d.name; 
+    $('dinfo').textContent = `Gevangen: ${d.n}×${d.shiny ? '  ✨' : ''}`;
+    $('say').onclick = () => say(d.name); 
+    $('detail').classList.add('on'); 
+    say(d.name); 
+  };
+
+  document.querySelectorAll('.tabs .pill').forEach(b => b.onclick = () => { 
+    tab = b.dataset.t; 
+    document.querySelectorAll('.tabs .pill').forEach(x => x.classList.toggle('on', x === b)); 
+    renderDex(); 
+  });
+
+  $('dexbtn').onclick = () => { renderDex(); $('dex').classList.add('on'); }; 
+  $('dexclose').onclick = () => $('dex').classList.remove('on'); 
+  $('dclose').onclick = () => $('detail').classList.remove('on');
+
+  const gear = $('gear'); 
+  let hold = null;
+  const startHold = (e) => { 
+    if (e.cancelable) e.preventDefault();
+    hold = setTimeout(() => { fillParentMenu(); $('parent').classList.add('on'); }, 1500); 
+  };
+  const stopHold = () => clearTimeout(hold);
+
+  ['touchstart', 'mousedown', 'pointerdown'].forEach(ev => gear.addEventListener(ev, startHold, { passive: false }));
+  ['touchend', 'touchcancel', 'mouseup', 'mouseleave', 'pointerup', 'pointercancel'].forEach(ev => gear.addEventListener(ev, stopHold));
+
+  function fillParentMenu() { 
+    $('p-sound').textContent = S.sound ? 'Aan' : 'Uit'; 
+    $('p-voice').textContent = S.voice ? 'Aan' : 'Uit'; 
+    $('p-size').value = S.size; 
+  }
+
+  $('pclose').onclick = () => $('parent').classList.remove('on');
+  $('p-sound').onclick = () => { S.sound = !S.sound; save(); fillParentMenu(); }; 
+  $('p-voice').onclick = () => { S.voice = !S.voice; save(); fillParentMenu(); };
+  $('p-size').onchange = e => { S.size = +e.target.value; save(); $('count').textContent = total(); spawn(); };
+  
+  $('p-export').onclick = async () => { 
+    const code = btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+    try { 
+      await navigator.clipboard.writeText(code); 
+      alert('Back-upcode gekopieerd naar klembord!'); 
+    } catch { 
+      prompt('Kopieer deze back-upcode:', code); 
+    } 
+  };
+
+  $('p-import').onclick = () => { 
+    const c = prompt('Plak de back-upcode:'); 
+    if (!c) return;
+    try { 
+      S = { ...def, ...JSON.parse(decodeURIComponent(escape(atob(c.trim())))) }; 
+      save(); 
+      fillParentMenu(); 
+      $('count').textContent = total(); 
+      alert('Voortgang hersteld!'); 
+      spawn(); 
+    } catch { 
+      alert('Die code klopt niet.'); 
+    } 
+  };
+
+  $('p-reset').onclick = () => { 
+    if (confirm('Alle gevangen Pokémon wissen?') && confirm('Zeker weten? Dit kan niet ongedaan gemaakt worden.')) { 
+      S = { ...def }; 
+      save(); 
+      $('count').textContent = 0; 
+      spawn(); 
+    } 
+  };
+
+  $('throw').onclick = throwBall;
+  $('next').onclick = () => { 
+    if (!busy || !cur) { 
+      try { speechSynthesis.cancel(); } catch {} 
+      spawn(); 
+    } 
+  };
+
+  $('count').textContent = total(); 
+  spawn();
+</script>
+</body>
+</html>
