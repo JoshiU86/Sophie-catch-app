@@ -48,6 +48,7 @@
     cursor: pointer;
   }
   .pill:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.2); }
+  #streak { font-size: 18px; padding: 10px 14px; }
   #gear { font-size: 22px; padding: 12px 15px; opacity: .8; }
   .scene { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; }
   #mon { width: min(70vw, 36vh); height: min(70vw, 36vh); object-fit: contain; animation: float 2.4s ease-in-out infinite; filter: drop-shadow(0 12px 6px rgba(0,0,0,.25)); transition: opacity .3s, transform .4s ease-in; }
@@ -116,6 +117,7 @@
 <div id="app">
   <div class="top">
     <button class="pill" id="dexbtn">📖 <span id="count">0</span></button>
+    <div class="pill" id="streak">🔥 0/10</div>
     <button class="pill" id="gear">⚙️</button>
   </div>
   <div class="scene">
@@ -139,12 +141,18 @@
 <div class="layer" id="dex">
   <div class="bar"><h2>Mijn Pokédex <span id="dcount"></span></h2><button class="pill" id="dexclose">✖</button></div>
   <div id="prog"><i></i></div>
-  <div class="tabs"><button class="pill on" data-t="all">Alle</button><button class="pill" data-t="shiny">✨ Glitter</button></div>
+  <div class="tabs"><button class="pill on" data-t="all">Alle</button><button class="pill" data-t="shiny">✨ Shiny</button></div>
   <div id="grid"></div>
 </div>
 
 <div class="layer big" id="detail"><div class="box"><img id="dimg" alt=""><h3 id="dname"></h3><div id="dinfo"></div>
   <p><button class="pill" id="say">🔊</button> <button class="pill" id="dclose">OK</button></p></div></div>
+
+<div class="layer big" id="reward"><div class="box">
+  <h3>🔥 10 op een rij!</h3><p style="font-size:20px;margin:6px 0 12px">Kies je beloning:</p>
+  <button class="pill" id="r-great" style="margin:6px"><span class="ball ball-great" style="--s:34px;vertical-align:middle"></span> 25 Great Balls</button><br>
+  <button class="pill" id="r-ultra" style="margin:6px"><span class="ball ball-ultra" style="--s:34px;vertical-align:middle"></span> 10 Ultra Balls</button>
+</div></div>
 
 <div class="layer" id="parent" style="background:#f3f4f6">
   <div class="bar"><h2>Voor ouders</h2><button class="pill" id="pclose">✖</button></div>
@@ -160,7 +168,7 @@
   const $ = id => document.getElementById(id);
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const K = 'pkmnKids', API = 'https://pokeapi.co/api/v2/', ART = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
-  const SHINY = 0.05; 
+  const SHINY = 0.01; // kans op een shiny: 1 op 100 
 
   // Aangepaste dagelijkse limieten (50 Great, 25 Ultra)
   const LIMITS = { poke: Infinity, great: 50, ultra: 25, master: 1 };
@@ -171,20 +179,25 @@
     sound: true, 
     voice: true, 
     balls: { poke: Infinity, great: 50, ultra: 25, master: 1 },
-    lastDate: new Date().toDateString()
+    lastDate: new Date().toDateString(),
+    streak: 0
   };
+
+  // Dagelijks bijvullen tot de limiet; verdiende extra ballen blijven behouden.
+  const refill = b => { const o = { ...b, poke: Infinity }; ['great', 'ultra', 'master'].forEach(k => o[k] = Math.max(+b[k] || 0, LIMITS[k])); return o; };
+  const fresh = () => ({ ...def, balls: { ...def.balls }, caught: {} });
 
   let S = (() => { 
     try { 
       let data = { ...def, ...JSON.parse(localStorage.getItem(K)) };
       let today = new Date().toDateString();
       if (data.lastDate !== today) {
-        data.balls = { ...LIMITS };
+        data.balls = refill(data.balls || {});
         data.lastDate = today;
       }
       return data;
     } catch { 
-      return { ...def }; 
+      return fresh(); 
     } 
   })();
 
@@ -248,7 +261,7 @@
   function updateBallUI() {
     let today = new Date().toDateString();
     if (S.lastDate !== today) {
-      S.balls = { ...LIMITS };
+      S.balls = refill(S.balls || {});
       S.lastDate = today;
       save();
     }
@@ -290,8 +303,19 @@
     };
   });
 
+  const STREAK_GOAL = 10;
+  function updateStreak() { $('streak').textContent = `🔥 ${S.streak || 0}/${STREAK_GOAL}`; }
+  function breakStreak() { if (S.streak) { S.streak = 0; save(); } updateStreak(); }
+  function chooseReward() {
+    return new Promise(res => {
+      $('reward').classList.add('on'); say('Tien op een rij! Kies je beloning!');
+      const pick = k => { S.balls[k] = (S.balls[k] || 0) + (k === 'great' ? 25 : 10); save(); updateBallUI(); $('reward').classList.remove('on'); res(); };
+      $('r-great').onclick = () => pick('great'); $('r-ultra').onclick = () => pick('ultra');
+    });
+  }
+
   async function spawn() {
-    updateBallUI();
+    updateBallUI(); updateStreak();
     busy = true; $('throw').disabled = true; 
     const mon = $('mon');
     mon.classList.remove('flee');
@@ -324,7 +348,7 @@
     mon.src = cur.img; 
     mon.onload = () => { mon.style.opacity = 1; };
     $('name').textContent = (shiny ? '✨ ' : '') + cur.name; 
-    $('msg').textContent = shiny ? 'Wow, een glitter-Pokémon!' : (cur.legendary ? 'Wauw! Een zeldzame Pokémon!' : 'Een wilde Pokémon!');
+    $('msg').textContent = shiny ? 'Wow, een shiny Pokémon!' : (cur.legendary ? 'Wauw! Een zeldzame Pokémon!' : 'Een wilde Pokémon!');
     $('throw').disabled = false; 
     busy = false;
   }
@@ -388,9 +412,15 @@
     if (success) {
       const c = S.caught[cur.id] || (S.caught[cur.id] = { n: 0, name: cur.name, shiny: false }), isNew = c.n === 0;
       c.n++; 
-      if (cur.shiny) c.shiny = true; 
+      if (cur.shiny) { if (!c.shiny) c.shinyAt = Date.now(); c.shiny = true; } 
       save(); 
       $('count').textContent = total();
+      let reward = false;
+      if (misses === 0) { // gevangen in één worp
+        S.streak = (S.streak || 0) + 1;
+        if (S.streak >= STREAK_GOAL) { S.streak = 0; reward = true; }
+        save(); updateStreak();
+      }
       sound('win'); 
       confetti(); 
       say('Gevangen! ' + cur.name);
@@ -398,11 +428,13 @@
       await sleep(3200); 
       ball.style.display = 'none'; 
       $('next').disabled = false; 
+      if (reward) await chooseReward();
       await spawn();
     } else if (flees) {
       sound('miss'); 
       ball.style.display = 'none'; 
       mon.style.opacity = 1; 
+      breakStreak();
       $('msg').textContent = 'Oh nee! Hij is uit de bal gekomen...';
       await sleep(1000);
       
@@ -418,7 +450,7 @@
       sound('miss'); 
       ball.style.display = 'none'; 
       mon.style.opacity = 1; 
-      misses++;
+      misses++; breakStreak();
       $('msg').textContent = 'Oei, hij is ontsnapt! Probeer opnieuw! 💪'; 
       $('throw').disabled = false; 
       $('next').disabled = false; 
@@ -431,13 +463,17 @@
     $('dcount').textContent = n + '/' + S.size; 
     $('prog').firstElementChild.style.width = (n / S.size * 100) + '%';
     let h = '';
-    for (let id = 1; id <= S.size; id++) {
+    const ids = tab === 'shiny'
+      ? Object.keys(S.caught).map(Number).filter(i => S.caught[i].shiny && i <= S.size)
+          .sort((a, b) => (S.caught[a].shinyAt || 0) - (S.caught[b].shinyAt || 0) || a - b)
+      : Array.from({ length: S.size }, (_, i) => i + 1);
+    for (const id of ids) {
       const c = S.caught[id], shinyTab = tab === 'shiny';
       if (shinyTab && !(c && c.shiny)) continue;
       h += c ? `<div class="card" data-id="${id}"><img loading="lazy" src="${ART}${shinyTab ? 'shiny/' : ''}${id}.png" alt=""><div>${shinyTab || c.shiny ? '✨ ' : ''}${c.name}</div></div>`
              : `<div class="card no"><img loading="lazy" src="${ART}${id}.png" alt=""><div>${id}</div></div>`;
     }
-    $('grid').innerHTML = h || '<p style="grid-column:1/-1;text-align:center;font-size:20px;color:#6b7280">Nog geen glitter-Pokémon…<br>Blijf vangen! ✨</p>';
+    $('grid').innerHTML = h || '<p style="grid-column:1/-1;text-align:center;font-size:20px;color:#6b7280">Nog geen shiny Pokémon…<br>Blijf vangen! ✨</p>';
   }
 
   $('grid').onclick = e => { 
@@ -511,7 +547,7 @@
 
   $('p-reset').onclick = () => { 
     if (confirm('Alle gevangen Pokémon wissen?') && confirm('Zeker weten? Dit kan niet ongedaan gemaakt worden.')) { 
-      S = { ...def }; 
+      S = fresh(); 
       save(); 
       $('count').textContent = 0; 
       spawn(); 
