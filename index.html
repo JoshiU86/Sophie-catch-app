@@ -28,13 +28,18 @@
     position: fixed;
   }
   body { 
-    background: linear-gradient(#7dd3fc 0 55%, #86efac 55%); 
+    background: linear-gradient(var(--sky, #7dd3fc) 0 55%, var(--ground, #86efac) 55%); 
     padding-top: env(safe-area-inset-top);
     padding-right: env(safe-area-inset-right);
     padding-bottom: env(safe-area-inset-bottom);
     padding-left: env(safe-area-inset-left);
   }
-  #app { height: 100%; display: flex; flex-direction: column; }
+  #app { height: 100%; display: flex; flex-direction: column; position: relative; z-index: 1; }
+  #deco { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  #deco span { position: absolute; opacity: .5; animation-timing-function: linear; animation-iteration-count: infinite; }
+  #deco .up { top: 100%; animation-name: drift-up; } #deco .down { top: -12%; animation-name: drift-down; }
+  @keyframes drift-up { to { transform: translateY(-125vh) rotate(25deg); } }
+  @keyframes drift-down { to { transform: translateY(125vh) rotate(-25deg); } }
   .top { display: flex; justify-content: space-between; align-items: center; padding: 12px; z-index: 10; }
   .pill { 
     border: 0; 
@@ -70,7 +75,7 @@
   .ball-ultra::before { content: ''; position: absolute; top: 8%; left: 20%; width: 60%; height: 28%; background: #222; border-radius: 4px; }
   .ball-mega { background: linear-gradient(#ec4899 0 44%, #222 44% 56%, #fff 56%); }
   .ball-mega::before { content: ''; position: absolute; top: 8%; left: 25%; width: 50%; height: 26%; background: #fce7f3; border-radius: 50%; }
-  #reset-timer { font-size: 13px; font-weight: bold; color: #1e3a8a; background: rgba(255,255,255,.7); border-radius: 99px; padding: 3px 12px; }
+  #reset-timer { align-self: flex-start; margin: 0 12px 8px; font-size: 13px; font-weight: bold; color: #1e3a8a; background: rgba(255,255,255,.7); border-radius: 99px; padding: 3px 12px; }
   .ball-master { background: linear-gradient(#a855f7 0 44%, #222 44% 56%, #fff 56%); }
   .ball-master::before { content: 'M'; position: absolute; top: 2%; left: 50%; transform: translateX(-50%); color: #fff; font-weight: 900; font-size: 14px; font-family: sans-serif; z-index: 2; }
 
@@ -119,6 +124,7 @@
 </style>
 </head>
 <body>
+<div id="deco"></div>
 <div id="app">
   <div class="top">
     <button class="pill" id="dexbtn">📖 <span id="count">0</span></button>
@@ -140,7 +146,6 @@
       <div class="ball-opt" data-ball="ultra"><div class="ball ball-ultra"></div><span class="ball-badge" id="b-ultra-badge">25</span></div>
       <div class="ball-opt" data-ball="master"><div class="ball ball-master"></div><span class="ball-badge" id="b-master-badge">1</span></div>
     </div>
-    <div id="reset-timer"></div>
     <button id="throw"><span class="ball ball-poke" id="btn-ball"></span> Gooi!</button>
     <button class="pill" id="next">🔍 Andere Pokémon</button>
   </div>
@@ -148,6 +153,7 @@
 
 <div class="layer" id="dex">
   <div class="bar"><h2>Mijn Pokédex <span id="dcount"></span></h2><button class="pill" id="dexclose">✖</button></div>
+  <div id="reset-timer"></div>
   <div id="prog"><i></i></div>
   <div class="tabs"><button class="pill on" data-t="all">Alle</button><button class="pill" data-t="shiny">✨ Shiny</button></div>
   <div id="grid"></div>
@@ -166,6 +172,7 @@
   <div class="bar"><h2>Voor ouders</h2><button class="pill" id="pclose">✖</button></div>
   <div class="row">Geluid <button class="pill" id="p-sound"></button></div>
   <div class="row">Stem (leest namen voor) <button class="pill" id="p-voice"></button></div>
+  <div class="row">Muziek <button class="pill" id="p-music"></button></div>
   <div class="row">Aantal Pokémon <select id="p-size" style="font-size:18px"><option value="151">151 (Kanto)</option><option value="251">251</option><option value="386">386</option><option value="1025">1025 (alles)</option></select></div>
   <div class="row">Back-up <span><button class="pill" id="p-export">Kopieer</button> <button class="pill" id="p-import">Plak</button></span></div>
   <div class="row">Alles wissen <button class="pill" id="p-reset">Wissen</button></div>
@@ -183,6 +190,8 @@
 
   const def = { 
     caught: {}, 
+    shinies: {}, 
+    music: true, 
     size: 151, 
     sound: true, 
     voice: true, 
@@ -195,11 +204,25 @@
 
   // Dagelijks bijvullen tot de limiet; verdiende extra ballen blijven behouden.
   const refill = b => { const o = { ...b, poke: Infinity }; ['great', 'ultra', 'master'].forEach(k => o[k] = Math.max(+b[k] || 0, LIMITS[k])); o.mega = +b.mega || 0; return o; }; // mega-ballen worden niet bijgevuld, wel bewaard
-  const fresh = () => ({ ...def, balls: { ...def.balls }, caught: {} });
+  const fresh = () => ({ ...def, balls: { ...def.balls }, caught: {}, shinies: {}, v: 2 });
+  // Oude opslag: een shiny telde mee in de gewone Pokédex. Nu staan ze apart; de gewone vangst telt alleen als ze de gewone echt heeft gevangen.
+  function migrate(d) {
+    d.shinies = d.shinies || {};
+    if (!d.v || d.v < 2) {
+      for (const [id, c] of Object.entries(d.caught || {})) {
+        if (!c.shiny) continue;
+        d.shinies[id] = d.shinies[id] || { n: 1, name: c.name, at: c.shinyAt || 0 };
+        c.n = (c.n || 1) - 1; delete c.shiny; delete c.shinyAt;
+        if (c.n <= 0) delete d.caught[id];
+      }
+      d.v = 2;
+    }
+    return d;
+  }
 
   let S = (() => { 
     try { 
-      let data = { ...def, ...JSON.parse(localStorage.getItem(K)) };
+      let data = migrate({ ...def, ...JSON.parse(localStorage.getItem(K)) });
       let today = new Date().toDateString();
       if (data.lastDate !== today) {
         data.balls = refill(data.balls || {});
@@ -244,6 +267,37 @@
       else if (k === 'flee') tone('sawtooth', 300, 100, 0, .4, .25);
     } catch {} 
   }
+
+  // Zacht achtergrondmuziekje (zelf gemaakt, 8-bit stijl) in een lus
+  const NOTE = n => { const m = /^([A-G])(#?)(\d)$/.exec(n); const off = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }[m[1]] + (m[2] ? 1 : 0);
+    return 440 * Math.pow(2, (12 * (+m[3] + 1) + off - 69) / 12); };
+  const MEL = [
+    'E5', 0, 'G5', 0, 'E5', 0, 'D5', 'C5',   'C5', 0, 'E5', 0, 'A4', 0, 0, 0,   'A4', 0, 'C5', 0, 'F5', 0, 'E5', 'D5',   'D5', 0, 'G4', 'B4', 'D5', 0, 0, 0,
+    'G5', 0, 'E5', 0, 'C5', 0, 'E5', 'G5',   'A5', 0, 'G5', 0, 'E5', 0, 'C5', 0,   'A5', 0, 'F5', 0, 'A5', 0, 'C6', 0,   'B5', 0, 'G5', 0, 'D5', 'B4', 'G4', 0 ];
+  const BASS = ['C3', 'G3', 'C3', 'G3', 'A2', 'E3', 'A2', 'E3', 'F2', 'C3', 'F2', 'C3', 'G2', 'D3', 'G2', 'D3'];
+  const STEP = 60 / 100 / 2; // 100 bpm, achtste noten
+  let mStep = 0, mNext = 0, mTimer = null;
+  function mnote(f, t, d, type, v) {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + .02); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + d + .05);
+  }
+  function musicTick() {
+    while (mNext < ac.currentTime + .4) {
+      const s = mStep % 64;
+      if (MEL[s]) mnote(NOTE(MEL[s]), mNext, STEP * 1.8, 'square', .03);
+      if (s % 2 === 0) mnote(NOTE(BASS[(s / 2) % 16]), mNext, STEP * 1.9, 'triangle', .07);
+      mNext += STEP; mStep++;
+    }
+  }
+  function musicStart() {
+    if (!S.music || mTimer) return;
+    try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume(); mNext = ac.currentTime + .15; mTimer = setInterval(musicTick, 150); } catch {}
+  }
+  function musicStop() { clearInterval(mTimer); mTimer = null; }
+  document.addEventListener('pointerdown', musicStart); // browsers staan geluid pas toe na een tik
+  document.addEventListener('visibilitychange', () => { document.hidden ? musicStop() : musicStart(); });
 
   // Nederlandse zinnen, maar Pokémon-namen worden Engels uitgesproken.
   function sayMix(...parts) {
@@ -362,6 +416,31 @@
     });
   }
 
+  // Achtergrond per type: kleuren en zwevende plaatjes
+  const TYPES = {
+    normal: { sky: '#bae6fd', ground: '#a7f3d0', e: '☁️' }, fire: { sky: '#fdba74', ground: '#b91c1c', e: '🔥' },
+    water: { sky: '#7dd3fc', ground: '#0284c7', e: '💧' }, electric: { sky: '#fde68a', ground: '#ca8a04', e: '⚡' },
+    grass: { sky: '#bbf7d0', ground: '#16a34a', e: '🍃', down: 1 }, ice: { sky: '#e0f2fe', ground: '#a5d8f3', e: '❄️', down: 1 },
+    fighting: { sky: '#fca5a5', ground: '#92400e', e: '💥' }, poison: { sky: '#d8b4fe', ground: '#7e22ce', e: '🟣' },
+    ground: { sky: '#fde68a', ground: '#a16207', e: '🌵' }, flying: { sky: '#93c5fd', ground: '#e0f2fe', e: '☁️' },
+    psychic: { sky: '#f9a8d4', ground: '#a855f7', e: '🔮' }, bug: { sky: '#d9f99d', ground: '#4d7c0f', e: '🦋' },
+    rock: { sky: '#d6d3d1', ground: '#78716c', e: '🪨' }, ghost: { sky: '#6d28d9', ground: '#1e1b4b', e: '👻' },
+    dragon: { sky: '#818cf8', ground: '#3730a3', e: '🐉' }, dark: { sky: '#4b5563', ground: '#111827', e: '🌙' },
+    steel: { sky: '#cbd5e1', ground: '#64748b', e: '⚙️' }, fairy: { sky: '#fbcfe8', ground: '#f472b6', e: '🌸', down: 1 }
+  };
+  function setBackground(type) {
+    const t = TYPES[type] || TYPES.normal;
+    document.body.style.setProperty('--sky', t.sky); document.body.style.setProperty('--ground', t.ground);
+    const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = t.sky;
+    const d = $('deco'); d.innerHTML = '';
+    for (let i = 0; i < 9; i++) {
+      const sp = document.createElement('span'), dur = 9 + Math.random() * 9;
+      sp.textContent = t.e; sp.className = t.down ? 'down' : 'up'; sp.style.left = Math.random() * 92 + 'vw';
+      sp.style.fontSize = (22 + Math.random() * 26) + 'px'; sp.style.animationDuration = dur + 's'; sp.style.animationDelay = (-Math.random() * dur) + 's';
+      d.append(sp);
+    }
+  }
+
   async function spawn() {
     updateBallUI(); updateStreak(); updateSkipUI();
     busy = true; $('throw').disabled = true; 
@@ -382,6 +461,7 @@
         shiny, 
         name: cap(p.name), 
         legendary: !!(sp.is_legendary || sp.is_mythical),
+        type: p.types?.[0]?.type?.name || 'normal',
         img: ART + (shiny ? 'shiny/' : '') + id + '.png', 
         alt: p.sprites.other?.['official-artwork']?.[shiny ? 'front_shiny' : 'front_default'] || p.sprites.front_default 
       };
@@ -392,6 +472,7 @@
       return; 
     }
     misses = 0;
+    setBackground(cur.type);
     mon.onerror = () => { mon.onerror = null; mon.src = cur.alt; }; 
     mon.src = cur.img; 
     mon.onload = () => { mon.style.opacity = 1; };
@@ -460,10 +541,10 @@
     await sleep(1100);
 
     if (success) {
-      const c = S.caught[cur.id] || (S.caught[cur.id] = { n: 0, name: cur.name, shiny: false }), isNew = c.n === 0;
-      c.n++; 
-      if (cur.shiny) { if (!c.shiny) c.shinyAt = Date.now(); c.shiny = true; } 
-      save(); 
+      const bucket = cur.shiny ? S.shinies : S.caught; // shiny's staan apart en tellen niet mee voor de gewone Pokédex
+      const c = bucket[cur.id] || (bucket[cur.id] = { n: 0, name: cur.name, at: Date.now() }), isNew = c.n === 0;
+      c.n++;
+      save();
       $('count').textContent = total();
       S.skips = 0; save(); updateSkipUI(); // vangst: zoeken weer 3x mogelijk
       let reward = false;
@@ -475,7 +556,7 @@
       sound('win'); 
       confetti(); 
       sayMix(['Gevangen!', 'nl-NL'], [cur.name, 'en-US']);
-      $('msg').textContent = isNew ? '🎉 Gevangen! Nieuw in je Pokédex!' : '🎉 Gevangen!';
+      $('msg').textContent = isNew ? (cur.shiny ? '🎉 Gevangen! Nieuw in je shiny Pokédex!' : '🎉 Gevangen! Nieuw in je Pokédex!') : '🎉 Gevangen!';
       if (misses === 0 && !STREAK_BALLS.includes(usedBall)) $('msg').textContent += ' (telt niet mee voor 🔥)';
       await sleep(3200); 
       ball.style.display = 'none'; 
@@ -512,18 +593,18 @@
   }
 
   function renderDex() {
-    const n = total(); 
-    $('dcount').textContent = n + '/' + S.size; 
-    $('prog').firstElementChild.style.width = (n / S.size * 100) + '%';
-    let h = '';
-    const ids = tab === 'shiny'
-      ? Object.keys(S.caught).map(Number).filter(i => S.caught[i].shiny && i <= S.size)
-          .sort((a, b) => (S.caught[a].shinyAt || 0) - (S.caught[b].shinyAt || 0) || a - b)
+    const shinyTab = tab === 'shiny';
+    const ids = shinyTab
+      ? Object.keys(S.shinies).map(Number).filter(i => i <= S.size).sort((a, b) => (S.shinies[a].at || 0) - (S.shinies[b].at || 0) || a - b) // op volgorde van vangen
       : Array.from({ length: S.size }, (_, i) => i + 1);
+    const n = shinyTab ? ids.length : total();
+    $('dcount').textContent = shinyTab ? '✨ ' + n : n + '/' + S.size;
+    $('prog').style.display = shinyTab ? 'none' : '';
+    if (!shinyTab) $('prog').firstElementChild.style.width = (n / S.size * 100) + '%';
+    let h = '';
     for (const id of ids) {
-      const c = S.caught[id], shinyTab = tab === 'shiny';
-      if (shinyTab && !(c && c.shiny)) continue;
-      h += c ? `<div class="card" data-id="${id}"><img loading="lazy" src="${ART}${shinyTab ? 'shiny/' : ''}${id}.png" alt=""><div>${shinyTab || c.shiny ? '✨ ' : ''}${c.name}</div></div>`
+      const c = shinyTab ? S.shinies[id] : S.caught[id];
+      h += c ? `<div class="card" data-id="${id}"><img loading="lazy" src="${ART}${shinyTab ? 'shiny/' : ''}${id}.png" alt=""><div>${shinyTab ? '✨ ' : ''}${c.name}</div></div>`
              : `<div class="card no"><img loading="lazy" src="${ART}${id}.png" alt=""><div>${id}</div></div>`;
     }
     $('grid').innerHTML = h || '<p style="grid-column:1/-1;text-align:center;font-size:20px;color:#6b7280">Nog geen shiny Pokémon…<br>Blijf vangen! ✨</p>';
@@ -532,10 +613,10 @@
   $('grid').onclick = e => { 
     const c = e.target.closest('.card[data-id]'); 
     if (!c) return; 
-    const id = c.dataset.id, d = S.caught[id], sh = tab === 'shiny';
+    const id = c.dataset.id, sh = tab === 'shiny', d = (sh ? S.shinies : S.caught)[id];
     $('dimg').src = ART + (sh ? 'shiny/' : '') + id + '.png'; 
     $('dname').textContent = d.name; 
-    $('dinfo').textContent = `Gevangen: ${d.n}×${d.shiny ? '  ✨' : ''}`;
+    $('dinfo').textContent = `Gevangen: ${d.n}×${sh ? '  ✨' : ''}`;
     $('say').onclick = () => say(d.name, 'en-US'); 
     $('detail').classList.add('on'); 
     say(d.name, 'en-US'); 
@@ -565,12 +646,14 @@
   function fillParentMenu() { 
     $('p-sound').textContent = S.sound ? 'Aan' : 'Uit'; 
     $('p-voice').textContent = S.voice ? 'Aan' : 'Uit'; 
+    $('p-music').textContent = S.music ? 'Aan' : 'Uit';
     $('p-size').value = S.size; 
   }
 
   $('pclose').onclick = () => $('parent').classList.remove('on');
   $('p-sound').onclick = () => { S.sound = !S.sound; save(); fillParentMenu(); }; 
   $('p-voice').onclick = () => { S.voice = !S.voice; save(); fillParentMenu(); };
+  $('p-music').onclick = () => { S.music = !S.music; save(); fillParentMenu(); S.music ? musicStart() : musicStop(); };
   $('p-size').onchange = e => { S.size = +e.target.value; save(); $('count').textContent = total(); spawn(); };
   
   $('p-export').onclick = async () => { 
@@ -587,7 +670,7 @@
     const c = prompt('Plak de back-upcode:'); 
     if (!c) return;
     try { 
-      S = { ...def, ...JSON.parse(decodeURIComponent(escape(atob(c.trim())))) }; 
+      S = migrate({ ...def, ...JSON.parse(decodeURIComponent(escape(atob(c.trim())))) }); 
       save(); 
       fillParentMenu(); 
       $('count').textContent = total(); 
