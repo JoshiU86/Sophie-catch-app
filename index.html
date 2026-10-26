@@ -57,8 +57,18 @@
   #streak.dim { opacity: .45; }
   #next.dim { opacity: .45; }
   #gear { font-size: 22px; padding: 12px 15px; opacity: .8; }
+  
   .scene { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; }
-  #mon { width: min(70vw, 36vh); height: min(70vw, 36vh); object-fit: contain; animation: float 2.4s ease-in-out infinite; filter: drop-shadow(0 12px 6px rgba(0,0,0,.25)); transition: opacity .3s, transform .4s ease-in; }
+  
+  /* Trainer & Buddy Container (Linksboven in de scene of net naast het scherm) */
+  .companions { position: absolute; left: 16px; top: 10px; display: flex; align-items: flex-end; gap: 4px; z-index: 5; pointer-events: none; }
+  .trainer-avatar { width: 55px; height: 85px; background: #fff; border: 3px solid #1e3a8a; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.15); overflow: hidden; }
+  .trainer-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .buddy-avatar { width: 45px; height: 45px; background: rgba(255,255,255,0.9); border: 2px solid #fbbf24; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 5px rgba(0,0,0,0.15); position: relative; animation: float 2s ease-in-out infinite; }
+  .buddy-avatar img { width: 85%; height: 85%; object-fit: contain; }
+  .buddy-badge { position: absolute; top: -6px; right: -4px; font-size: 14px; }
+
+  #mon { width: min(65vw, 34vh); height: min(65vw, 34vh); object-fit: contain; animation: float 2.4s ease-in-out infinite; filter: drop-shadow(0 12px 6px rgba(0,0,0,.25)); transition: opacity .3s, transform .4s ease-in; }
   #mon.flee { transform: translateX(120vw) scale(0.6); opacity: 0 !important; }
   @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
   #name { font-size: 32px; font-weight: bold; color: #1e3a8a; text-shadow: 0 2px 0 #fff; margin-top: 4px; text-align: center; min-height: 40px; }
@@ -85,21 +95,23 @@
   .wig { animation: wig .6s ease-in-out; }
   @keyframes wig { 0%,100% { transform: rotate(0); } 20% { transform: rotate(-30deg); } 45% { transform: rotate(0); } 65% { transform: rotate(30deg); } 85% { transform: rotate(0); } }
   
-  .bottom { padding: 8px 16px 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .bottom { padding: 8px 16px 20px; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; width: 100%; }
   
-  /* Ball Selector Bar */
-  .ball-selector { display: flex; justify-content: center; gap: 8px; background: rgba(255,255,255,.85); padding: 8px 12px; border-radius: 999px; box-shadow: 0 3px 0 rgba(0,0,0,.15); }
+  /* Ball Selector Bar naar rechts verplaatst */
+  .ball-selector { display: flex; justify-content: flex-end; gap: 8px; background: rgba(255,255,255,.85); padding: 8px 12px; border-radius: 999px; box-shadow: 0 3px 0 rgba(0,0,0,.15); width: 100%; max-width: 380px; }
   .ball-opt { border: 3px solid transparent; border-radius: 50%; padding: 2px; cursor: pointer; transition: transform .15s, border-color .15s; position: relative; }
   .ball-opt.active { border-color: #fbbf24; transform: scale(1.12); }
   .ball-opt.depleted { opacity: 0.4; filter: grayscale(100%); }
   .ball-opt .ball { --s: 38px; }
   .ball-badge { position: absolute; bottom: -6px; right: -8px; background: #1e3a8a; color: #fff; font-size: 10px; font-weight: bold; border-radius: 99px; padding: 1px 5px; white-space: nowrap; }
 
-  #throw { --s: 34px; display: flex; align-items: center; justify-content: center; gap: 14px; width: 100%; max-width: 380px; border: 0; border-radius: 999px; padding: 14px;
-    font-size: 26px; font-weight: bold; color: #fff; background: #ef4444; box-shadow: 0 6px 0 #991b1b; cursor: pointer; }
+  .actions-row { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 380px; gap: 10px; }
+  #throw { --s: 34px; flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px; border: 0; border-radius: 999px; padding: 14px;
+    font-size: 24px; font-weight: bold; color: #fff; background: #ef4444; box-shadow: 0 6px 0 #991b1b; cursor: pointer; }
   #throw:active { transform: translateY(4px); box-shadow: 0 2px 0 #991b1b; }
   #throw:disabled { opacity: .5; pointer-events: none; }
-  #next { font-size: 17px; padding: 8px 16px; }
+  #next { font-size: 15px; padding: 12px 14px; white-space: nowrap; }
+
   .star { position: fixed; top: -40px; font-size: 30px; z-index: 50; pointer-events: none; animation: fall 2.2s ease-in forwards; }
   @keyframes fall { to { transform: translateY(110vh) rotate(360deg); opacity: .8; } }
 
@@ -113,9 +125,15 @@
   #prog { height: 14px; margin: 0 12px 10px; background: #fde68a; border-radius: 99px; overflow: hidden; }
   #prog i { display: block; height: 100%; background: #22c55e; width: 0; transition: width .5s; }
   #grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 0 12px 20px; align-content: start; -webkit-overflow-scrolling: touch; }
-  .card { background: #fff; border-radius: 16px; padding: 6px; text-align: center; box-shadow: 0 3px 0 rgba(0,0,0,.12); font-size: 13px; font-weight: bold; color: #1e3a8a; cursor: pointer; }
+  
+  .card { background: #fff; border-radius: 16px; padding: 6px; text-align: center; box-shadow: 0 3px 0 rgba(0,0,0,.12); font-size: 13px; font-weight: bold; color: #1e3a8a; cursor: pointer; position: relative; }
   .card img { width: 100%; aspect-ratio: 1; object-fit: contain; display: block; }
   .card.no img { filter: brightness(0); opacity: .15; } .card.no { color: #9ca3af; }
+  
+  /* Buddy hartje knop in Pokédex */
+  .buddy-btn { position: absolute; top: 6px; right: 6px; background: rgba(255,255,255,0.85); border: none; border-radius: 50%; width: 28px; height: 28px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
+  .card.is-buddy .buddy-btn { background: #f43f5e; color: #fff; }
+
   .big { align-items: center; justify-content: center; text-align: center; background: rgba(0,0,0,.6); }
   .big .box { background: #fff; border-radius: 28px; padding: 20px; width: min(86vw, 360px); }
   .big img { width: 70%; } .big h3 { font-size: 32px; margin: 6px 0; color: #1e3a8a; }
@@ -131,14 +149,37 @@
     <div class="pill" id="streak">🔥 0/5</div>
     <button class="pill" id="gear">⚙️</button>
   </div>
+  
   <div class="scene">
+    <!-- Trainer en Buddy linksonder/boven -->
+    <div class="companions" id="companions">
+      <div class="trainer-avatar" title="Trainer Sophie">
+        <!-- SVG Anime-stijl blond meisje trainer -->
+        <svg viewBox="0 0 60 80" width="100%" height="100%">
+          <path d="M15 35 Q30 20 45 35 L48 70 Q48 75 42 75 L18 75 Q12 75 12 70 Z" fill="#f43f5e"/>
+          <path d="M20 35 Q30 10 40 35 Q48 30 45 20 Q30 5 15 20 Q12 30 20 35" fill="#fde047"/>
+          <circle cx="30" cy="30" r="14" fill="#fbcfe8"/>
+          <circle cx="25" cy="28" r="2" fill="#1e293b"/>
+          <circle cx="35" cy="28" r="2" fill="#1e293b"/>
+          <path d="M28 35 Q30 38 32 35" stroke="#e11d48" stroke-width="1.5" fill="none"/>
+        </svg>
+      </div>
+      <div class="buddy-avatar" id="buddy-display" title="Jouw Buddy">
+        <span class="buddy-badge">❤️</span>
+        <img id="buddy-img" src="" alt="Buddy">
+      </div>
+    </div>
+
     <img id="mon" alt="">
     <div class="ball ball-poke" id="thrown"></div>
     <div id="name"></div>
     <div id="msg"></div>
   </div>
+
   <div class="bottom">
-    <button class="pill" id="gift" style="display:none;font-size:18px;padding:10px 18px">🎁 Cadeau: 10 Super Balls!</button>
+    <button class="pill" id="gift" style="display:none;font-size:18px;padding:10px 18px;align-self:center">🎁 Cadeau: 10 Super Balls!</button>
+    
+    <!-- Rechts uitgelijnde bal selector -->
     <div class="ball-selector" id="b-select">
       <div class="ball-opt active" data-ball="poke"><div class="ball ball-poke"></div><span class="ball-badge" id="b-poke-badge">∞</span></div>
       <div class="ball-opt" data-ball="great"><div class="ball ball-great"></div><span class="ball-badge" id="b-great-badge">50</span></div>
@@ -146,8 +187,11 @@
       <div class="ball-opt" data-ball="ultra"><div class="ball ball-ultra"></div><span class="ball-badge" id="b-ultra-badge">25</span></div>
       <div class="ball-opt" data-ball="master"><div class="ball ball-master"></div><span class="ball-badge" id="b-master-badge">1</span></div>
     </div>
-    <button id="throw"><span class="ball ball-poke" id="btn-ball"></span> Gooi!</button>
-    <button class="pill" id="next">🔍 Andere Pokémon</button>
+
+    <div class="actions-row">
+      <button class="pill" id="next">🔍 Zoeken</button>
+      <button id="throw"><span class="ball ball-poke" id="btn-ball"></span> Gooi!</button>
+    </div>
   </div>
 </div>
 
@@ -160,7 +204,7 @@
 </div>
 
 <div class="layer big" id="detail"><div class="box"><img id="dimg" alt=""><h3 id="dname"></h3><div id="dinfo"></div>
-  <p><button class="pill" id="say">🔊</button> <button class="pill" id="dclose">OK</button></p></div></div>
+  <p><button class="pill" id="say">🔊</button> <button class="pill" id="buddy-set-btn" style="background:#f43f5e; color:#fff">❤️ Maak Buddy</button> <button class="pill" id="dclose">OK</button></p></div></div>
 
 <div class="layer big" id="reward"><div class="box">
   <h3>🔥 5 op een rij!</h3><p style="font-size:20px;margin:6px 0 12px">Kies je beloning:</p>
@@ -183,9 +227,8 @@
   const $ = id => document.getElementById(id);
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const K = 'pkmnKids', API = 'https://pokeapi.co/api/v2/', ART = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
-  const SHINY = 0.01; // kans op een shiny: 1 op 100 
+  const SHINY = 0.01; 
 
-  // Aangepaste dagelijkse limieten (50 Great, 25 Ultra)
   const LIMITS = { poke: Infinity, great: 50, ultra: 25, master: 1 };
 
   const def = { 
@@ -195,6 +238,7 @@
     size: 151, 
     sound: true, 
     voice: true, 
+    buddy: { id: 25, shiny: false }, // Standaard Pikachu als buddy
     balls: { poke: Infinity, great: 50, ultra: 25, master: 1, mega: 0 },
     lastDate: new Date().toDateString(),
     streak: 0,
@@ -202,12 +246,12 @@
     skips: 0
   };
 
-  // Dagelijks bijvullen tot de limiet; verdiende extra ballen blijven behouden.
-  const refill = b => { const o = { ...b, poke: Infinity }; ['great', 'ultra', 'master'].forEach(k => o[k] = Math.max(+b[k] || 0, LIMITS[k])); o.mega = +b.mega || 0; return o; }; // mega-ballen worden niet bijgevuld, wel bewaard
-  const fresh = () => ({ ...def, balls: { ...def.balls }, caught: {}, shinies: {}, v: 2 });
-  // Oude opslag: een shiny telde mee in de gewone Pokédex. Nu staan ze apart; de gewone vangst telt alleen als ze de gewone echt heeft gevangen.
+  const refill = b => { const o = { ...b, poke: Infinity }; ['great', 'ultra', 'master'].forEach(k => o[k] = Math.max(+b[k] || 0, LIMITS[k])); o.mega = +b.mega || 0; return o; };
+  const fresh = () => ({ ...def, balls: { ...def.balls }, caught: {}, shinies: {}, buddy: { id: 25, shiny: false }, v: 3 });
+
   function migrate(d) {
     d.shinies = d.shinies || {};
+    d.buddy = d.buddy || { id: 25, shiny: false };
     if (!d.v || d.v < 2) {
       for (const [id, c] of Object.entries(d.caught || {})) {
         if (!c.shiny) continue;
@@ -215,7 +259,7 @@
         c.n = (c.n || 1) - 1; delete c.shiny; delete c.shinyAt;
         if (c.n <= 0) delete d.caught[id];
       }
-      d.v = 2;
+      d.v = 3;
     }
     return d;
   }
@@ -268,14 +312,13 @@
     } catch {} 
   }
 
-  // Zacht achtergrondmuziekje (zelf gemaakt, 8-bit stijl) in een lus
   const NOTE = n => { const m = /^([A-G])(#?)(\d)$/.exec(n); const off = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }[m[1]] + (m[2] ? 1 : 0);
     return 440 * Math.pow(2, (12 * (+m[3] + 1) + off - 69) / 12); };
   const MEL = [
     'E5', 0, 'G5', 0, 'E5', 0, 'D5', 'C5',   'C5', 0, 'E5', 0, 'A4', 0, 0, 0,   'A4', 0, 'C5', 0, 'F5', 0, 'E5', 'D5',   'D5', 0, 'G4', 'B4', 'D5', 0, 0, 0,
     'G5', 0, 'E5', 0, 'C5', 0, 'E5', 'G5',   'A5', 0, 'G5', 0, 'E5', 0, 'C5', 0,   'A5', 0, 'F5', 0, 'A5', 0, 'C6', 0,   'B5', 0, 'G5', 0, 'D5', 'B4', 'G4', 0 ];
   const BASS = ['C3', 'G3', 'C3', 'G3', 'A2', 'E3', 'A2', 'E3', 'F2', 'C3', 'F2', 'C3', 'G2', 'D3', 'G2', 'D3'];
-  const STEP = 60 / 100 / 2; // 100 bpm, achtste noten
+  const STEP = 60 / 100 / 2;
   let mStep = 0, mNext = 0, mTimer = null;
   function mnote(f, t, d, type, v) {
     const o = ac.createOscillator(), g = ac.createGain();
@@ -296,10 +339,9 @@
     try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume(); mNext = ac.currentTime + .15; mTimer = setInterval(musicTick, 150); } catch {}
   }
   function musicStop() { clearInterval(mTimer); mTimer = null; }
-  document.addEventListener('pointerdown', musicStart); // browsers staan geluid pas toe na een tik
+  document.addEventListener('pointerdown', musicStart);
   document.addEventListener('visibilitychange', () => { document.hidden ? musicStop() : musicStart(); });
 
-  // Nederlandse zinnen, maar Pokémon-namen worden Engels uitgesproken.
   function sayMix(...parts) {
     if (!S.voice || !('speechSynthesis' in window)) return;
     try {
@@ -331,6 +373,13 @@
     } 
   }
 
+  // Update de Buddy op het scherm
+  function updateBuddyUI() {
+    const b = S.buddy || { id: 25, shiny: false };
+    const shPath = b.shiny ? 'shiny/' : '';
+    $('buddy-img').src = `${ART}${shPath}${b.id}.png`;
+  }
+
   function updateBallUI() {
     let today = new Date().toDateString();
     if (S.lastDate !== today) {
@@ -346,6 +395,7 @@
     $('b-master-badge').textContent = S.balls.master;
     $('b-mega-badge').textContent = S.balls.mega;
     updateGift();
+    updateBuddyUI();
 
     document.querySelectorAll('.ball-opt').forEach(opt => {
       const bType = opt.dataset.ball;
@@ -380,21 +430,21 @@
     };
   });
 
-  const MAX_SKIPS = 3; // "Andere Pokémon" mag 3x achter elkaar; een vangst of ontsnapping zet hem terug
+  const MAX_SKIPS = 3;
   function updateSkipUI() {
     const left = Math.max(0, MAX_SKIPS - (S.skips || 0));
-    $('next').textContent = `🔍 Andere Pokémon (${left})`;
+    $('next').textContent = `🔍 Zoeken (${left})`;
     $('next').classList.toggle('dim', left === 0);
   }
-  const STREAK_BALLS = ['poke', 'great']; // Super-, Ultra- en Master Balls tellen niet mee (te makkelijk)
+  const STREAK_BALLS = ['poke', 'great'];
   const todayStr = () => new Date().toDateString();
   function updateGift() { $('gift').style.display = S.giftDate === todayStr() ? 'none' : 'inline-block'; }
-  function claimGift() { // 1x per dag
+  function claimGift() {
     if (S.giftDate === todayStr()) return;
     S.giftDate = todayStr(); S.balls.mega = (+S.balls.mega || 0) + 10; save(); updateBallUI();
     confetti(); sound('win'); $('msg').textContent = '🎁 10 Super Balls erbij!';
   }
-  function tickTimer() { // aftellen tot middernacht, dan worden de ballen bijgevuld en is het cadeau er weer
+  function tickTimer() {
     const n = new Date(), m = new Date(n); m.setHours(24, 0, 0, 0);
     const t = Math.max(0, Math.floor((m - n) / 1000)), p = x => String(x).padStart(2, '0');
     $('reset-timer').textContent = `🔄 Nieuwe ballen over ${Math.floor(t / 3600)}:${p(Math.floor(t % 3600 / 60))}:${p(t % 60)}`;
@@ -405,7 +455,7 @@
   const STREAK_GOAL = 5;
   function updateStreak() {
     $('streak').textContent = `🔥 ${S.streak || 0}/${STREAK_GOAL}`;
-    $('streak').classList.toggle('dim', !STREAK_BALLS.includes(selectedBall)); // gedimd bij een bal die niet meetelt
+    $('streak').classList.toggle('dim', !STREAK_BALLS.includes(selectedBall));
   }
   function breakStreak() { if (S.streak) { S.streak = 0; save(); } updateStreak(); }
   function chooseReward() {
@@ -416,7 +466,6 @@
     });
   }
 
-  // Achtergrond per type: kleuren en zwevende plaatjes
   const TYPES = {
     normal: { sky: '#bae6fd', ground: '#a7f3d0', e: '☁️' }, fire: { sky: '#fdba74', ground: '#b91c1c', e: '🔥' },
     water: { sky: '#7dd3fc', ground: '#0284c7', e: '💧' }, electric: { sky: '#fde68a', ground: '#ca8a04', e: '⚡' },
@@ -467,7 +516,7 @@
       };
     } catch { 
       cur = null; 
-      $('msg').textContent = 'Geen internet 😢 Tik op "Andere Pokémon"'; 
+      $('msg').textContent = 'Geen internet 😢 Tik op "Zoeken"'; 
       busy = false; 
       return; 
     }
@@ -488,7 +537,7 @@
 
     if (ball === 'great') baseRate += 0.20;
     if (ball === 'ultra') baseRate += 0.40;
-    if (ball === 'mega') baseRate += 0.30; // Super Ball: tussen Great (+0.20) en Ultra (+0.40)
+    if (ball === 'mega') baseRate += 0.30;
     if (ball === 'master') baseRate = 1.0; 
 
     const success = Math.random() < Math.min(0.98, baseRate);
@@ -500,7 +549,7 @@
 
   async function throwBall() {
     if (busy || !cur) return;
-    const usedBall = selectedBall; // de bal die nu gegooid wordt (selectedBall kan veranderen als hij op is) 
+    const usedBall = selectedBall;
 
     if (S.balls[selectedBall] <= 0 && selectedBall !== 'poke') {
       $('msg').textContent = 'Op voorraad voor vandaag! Kies een andere bal.';
@@ -541,14 +590,14 @@
     await sleep(1100);
 
     if (success) {
-      const bucket = cur.shiny ? S.shinies : S.caught; // shiny's staan apart en tellen niet mee voor de gewone Pokédex
+      const bucket = cur.shiny ? S.shinies : S.caught;
       const c = bucket[cur.id] || (bucket[cur.id] = { n: 0, name: cur.name, at: Date.now() }), isNew = c.n === 0;
       c.n++;
       save();
       $('count').textContent = total();
-      S.skips = 0; save(); updateSkipUI(); // vangst: zoeken weer 3x mogelijk
+      S.skips = 0; save(); updateSkipUI();
       let reward = false;
-      if (misses === 0 && STREAK_BALLS.includes(usedBall)) { // gevangen in één worp met een gewone bal
+      if (misses === 0 && STREAK_BALLS.includes(usedBall)) {
         S.streak = (S.streak || 0) + 1;
         if (S.streak >= STREAK_GOAL) { S.streak = 0; reward = true; }
         save(); updateStreak();
@@ -567,7 +616,7 @@
       sound('miss'); 
       ball.style.display = 'none'; 
       mon.style.opacity = 1; 
-      S.skips = 0; save(); updateSkipUI(); // ontsnapt: zoeken weer 3x mogelijk
+      S.skips = 0; save(); updateSkipUI();
       if (STREAK_BALLS.includes(usedBall)) breakStreak();
       $('msg').textContent = 'Oh nee! Hij is uit de bal gekomen...';
       await sleep(1000);
@@ -595,28 +644,68 @@
   function renderDex() {
     const shinyTab = tab === 'shiny';
     const ids = shinyTab
-      ? Object.keys(S.shinies).map(Number).filter(i => i <= S.size).sort((a, b) => (S.shinies[a].at || 0) - (S.shinies[b].at || 0) || a - b) // op volgorde van vangen
+      ? Object.keys(S.shinies).map(Number).filter(i => i <= S.size).sort((a, b) => (S.shinies[a].at || 0) - (S.shinies[b].at || 0) || a - b)
       : Array.from({ length: S.size }, (_, i) => i + 1);
     const n = shinyTab ? ids.length : total();
     $('dcount').textContent = shinyTab ? '✨ ' + n : n + '/' + S.size;
     $('prog').style.display = shinyTab ? 'none' : '';
     if (!shinyTab) $('prog').firstElementChild.style.width = (n / S.size * 100) + '%';
+    
     let h = '';
     for (const id of ids) {
       const c = shinyTab ? S.shinies[id] : S.caught[id];
-      h += c ? `<div class="card" data-id="${id}"><img loading="lazy" src="${ART}${shinyTab ? 'shiny/' : ''}${id}.png" alt=""><div>${shinyTab ? '✨ ' : ''}${c.name}</div></div>`
-             : `<div class="card no"><img loading="lazy" src="${ART}${id}.png" alt=""><div>${id}</div></div>`;
+      const isBuddy = S.buddy && S.buddy.id === id && S.buddy.shiny === shinyTab;
+      
+      if (c) {
+        h += `<div class="card ${isBuddy ? 'is-buddy' : ''}" data-id="${id}" data-shiny="${shinyTab}">
+                <button class="buddy-btn" title="Kies als Buddy">❤️</button>
+                <img loading="lazy" src="${ART}${shinyTab ? 'shiny/' : ''}${id}.png" alt="">
+                <div>${shinyTab ? '✨ ' : ''}${c.name}</div>
+              </div>`;
+      } else {
+        h += `<div class="card no"><img loading="lazy" src="${ART}${id}.png" alt=""><div>${id}</div></div>`;
+      }
     }
     $('grid').innerHTML = h || '<p style="grid-column:1/-1;text-align:center;font-size:20px;color:#6b7280">Nog geen shiny Pokémon…<br>Blijf vangen! ✨</p>';
   }
 
-  $('grid').onclick = e => { 
-    const c = e.target.closest('.card[data-id]'); 
-    if (!c) return; 
-    const id = c.dataset.id, sh = tab === 'shiny', d = (sh ? S.shinies : S.caught)[id];
+  // Klik in Pokédex om details te bekijken of Buddy in te stellen
+  $('grid').onclick = e => {
+    const buddyBtn = e.target.closest('.buddy-btn');
+    const card = e.target.closest('.card[data-id]');
+    if (!card) return;
+    
+    const id = card.dataset.id;
+    const sh = card.dataset.shiny === 'true';
+    const d = (sh ? S.shinies : S.caught)[id];
+
+    if (buddyBtn) {
+      // Maak deze direct Buddy
+      S.buddy = { id: parseInt(id), shiny: sh };
+      save();
+      updateBuddyUI();
+      renderDex();
+      sound('win');
+      return;
+    }
+
+    // Anders opent detailvenster
     $('dimg').src = ART + (sh ? 'shiny/' : '') + id + '.png'; 
     $('dname').textContent = d.name; 
     $('dinfo').textContent = `Gevangen: ${d.n}×${sh ? '  ✨' : ''}`;
+    
+    const isCurrentBuddy = S.buddy && S.buddy.id == id && S.buddy.shiny === sh;
+    $('buddy-set-btn').textContent = isCurrentBuddy ? '❤️ Jouw Buddy!' : '❤️ Maak Buddy';
+
+    $('buddy-set-btn').onclick = () => {
+      S.buddy = { id: parseInt(id), shiny: sh };
+      save();
+      updateBuddyUI();
+      renderDex();
+      $('detail').classList.remove('on');
+      sound('win');
+    };
+
     $('say').onclick = () => say(d.name, 'en-US'); 
     $('detail').classList.add('on'); 
     say(d.name, 'en-US'); 
@@ -693,7 +782,7 @@
   $('throw').onclick = throwBall;
   $('next').onclick = () => {
     if (busy && cur) return;
-    if (!cur) { spawn(); return; } // geen internet eerder: opnieuw proberen telt niet mee
+    if (!cur) { spawn(); return; }
     if ((S.skips || 0) >= MAX_SKIPS) { $('msg').textContent = 'Je hebt 3 keer gezocht. Probeer deze Pokémon te vangen! 💪'; return; }
     S.skips = (S.skips || 0) + 1; save(); updateSkipUI();
     try { speechSynthesis.cancel(); } catch {}
@@ -701,6 +790,7 @@
   };
 
   $('count').textContent = total(); 
+  updateBuddyUI();
   spawn();
 </script>
 </body>
