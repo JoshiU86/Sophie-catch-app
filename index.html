@@ -58,11 +58,12 @@
   #next.dim { opacity: .45; }
   #gear { font-size: 22px; padding: 12px 15px; opacity: .8; }
   .scene { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; }
-  #mon { width: min(70vw, 36vh); height: min(70vw, 36vh); object-fit: contain; animation: float 2.4s ease-in-out infinite; filter: drop-shadow(0 12px 6px rgba(0,0,0,.25)); transition: opacity .3s, transform .4s ease-in; }
+  .monwrap { flex: 1; min-height: 0; width: 100%; position: relative; display: flex; align-items: center; justify-content: center; }
+  #mon { width: min(56vw, 28vh); height: min(56vw, 28vh); max-height: 100%; object-fit: contain; animation: float 2.4s ease-in-out infinite; filter: drop-shadow(0 12px 6px rgba(0,0,0,.25)); transition: opacity .3s, transform .4s ease-in; }
   #mon.flee { transform: translateX(120vw) scale(0.6); opacity: 0 !important; }
   @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
-  #name { font-size: 32px; font-weight: bold; color: #1e3a8a; text-shadow: 0 2px 0 #fff; margin-top: 4px; text-align: center; min-height: 40px; }
-  #msg { font-size: 20px; font-weight: bold; color: #7c2d12; background: rgba(255,255,255,.85); border-radius: 18px; padding: 8px 16px; margin-top: 4px; min-height: 42px; text-align: center; }
+  #name { font-size: 32px; font-weight: bold; color: #1e3a8a; text-shadow: 0 2px 0 #fff; margin-top: 4px; text-align: center; min-height: 40px; max-width: calc(100% - 150px); }
+  #msg { font-size: 20px; font-weight: bold; color: #7c2d12; background: rgba(255,255,255,.85); border-radius: 18px; padding: 8px 16px; margin-top: 4px; min-height: 42px; text-align: center; max-width: calc(100% - 150px); }
   
   /* Pokéball styling */
   .ball { width: var(--s, 80px); height: var(--s, 80px); border-radius: 50%; border: 4px solid #222; position: relative; flex: none; display: inline-block; }
@@ -81,19 +82,22 @@
 
   #thrown { --s: 70px; position: absolute; left: 50%; top: 50%; margin: -35px 0 0 -35px; display: none; z-index: 5; }
   .fly { display: block !important; animation: fly .8s ease-out forwards; }
-  @keyframes fly { 0% { transform: translate(0, 32vh) scale(.5) rotate(0); } 60% { transform: translate(0, -6vh) scale(1.1) rotate(540deg); } 100% { transform: translate(0, 0) scale(.9) rotate(720deg); } }
+  @keyframes fly { 0% { transform: translate(-26vw, 36vh) scale(.5) rotate(0); } 60% { transform: translate(-4vw, -6vh) scale(1.1) rotate(540deg); } 100% { transform: translate(0, 0) scale(.9) rotate(720deg); } }
   .wig { animation: wig .6s ease-in-out; }
   @keyframes wig { 0%,100% { transform: rotate(0); } 20% { transform: rotate(-30deg); } 45% { transform: rotate(0); } 65% { transform: rotate(30deg); } 85% { transform: rotate(0); } }
   
   .bottom { padding: 8px 16px 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
   
   /* Ball Selector Bar */
-  .ball-selector { display: flex; justify-content: center; gap: 8px; background: rgba(255,255,255,.85); padding: 8px 12px; border-radius: 999px; box-shadow: 0 3px 0 rgba(0,0,0,.15); }
+  .side { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 12px; z-index: 6; }
+  #gift { font-size: 26px; padding: 8px 12px; animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+  .ball-selector { display: flex; flex-direction: column; align-items: center; gap: 14px; background: rgba(255,255,255,.85); padding: 8px 6px 14px; border-radius: 28px; box-shadow: 0 3px 0 rgba(0,0,0,.15); }
   .ball-opt { border: 3px solid transparent; border-radius: 50%; padding: 2px; cursor: pointer; transition: transform .15s, border-color .15s; position: relative; }
   .ball-opt.active { border-color: #fbbf24; transform: scale(1.12); }
   .ball-opt.depleted { opacity: 0.4; filter: grayscale(100%); }
   .ball-opt .ball { --s: 38px; }
-  .ball-badge { position: absolute; bottom: -6px; right: -8px; background: #1e3a8a; color: #fff; font-size: 10px; font-weight: bold; border-radius: 99px; padding: 1px 5px; white-space: nowrap; }
+  .ball-badge { position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); background: #1e3a8a; color: #fff; font-size: 10px; font-weight: bold; border-radius: 99px; padding: 1px 5px; white-space: nowrap; }
 
   #throw { --s: 34px; display: flex; align-items: center; justify-content: center; gap: 14px; width: 100%; max-width: 380px; border: 0; border-radius: 999px; padding: 14px;
     font-size: 26px; font-weight: bold; color: #fff; background: #ef4444; box-shadow: 0 6px 0 #991b1b; cursor: pointer; }
@@ -126,7 +130,22 @@
   .trainer { position: relative; aspect-ratio: 2 / 3; pointer-events: none; }
   .trainer img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
   .trainer .tfb { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 64px; }
-  #app .trainer { position: absolute; left: 2vw; bottom: 0; height: min(32vh, 46vw * 1.5); z-index: 2; filter: drop-shadow(0 6px 4px rgba(0,0,0,.25)); transform-origin: 50% 100%; }
+  .stage { display: flex; align-items: flex-end; gap: 2px; width: 100%; padding: 4px 0 0 8px; flex: none; }
+  #app .trainer { position: relative; flex: none; height: min(25vh, 38vw * 1.5); filter: drop-shadow(0 6px 4px rgba(0,0,0,.25)); transform-origin: 50% 100%; }
+  #buddy { height: min(11vh, 22vw); width: auto; flex: none; margin-bottom: 2px; object-fit: contain; filter: drop-shadow(0 4px 3px rgba(0,0,0,.25)); animation: bob 1.8s ease-in-out infinite; }
+  #buddy.hop { animation: hop .5s ease-in-out 3; }
+  #buddy { cursor: pointer; }
+  #nobuddy { flex: none; width: min(9vh, 18vw); height: min(9vh, 18vw); margin-bottom: 8px; border-radius: 50%; border: 3px dashed rgba(255,255,255,.9); background: rgba(255,255,255,.35); font-size: 22px; cursor: pointer; animation: bob 1.8s ease-in-out infinite; }
+
+  /* Shiny: gouden gloed, sparkles, gouden naam en label */
+  #mon.shiny { filter: drop-shadow(0 0 10px #fde047) drop-shadow(0 0 26px #facc15) drop-shadow(0 12px 6px rgba(0,0,0,.25)); }
+  #name.shiny { background: linear-gradient(90deg, #f59e0b, #fef08a, #f59e0b, #fef08a); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; -webkit-text-stroke: 1.5px #92400e; animation: shimmer 2s linear infinite; }
+  @keyframes shimmer { to { background-position: 200% 0; } }
+  #msg.shiny { background: linear-gradient(135deg, #fde047, #f59e0b); color: #7c2d12; box-shadow: 0 0 0 3px #fff, 0 0 18px #facc15; animation: pulse 1.2s ease-in-out infinite; }
+  .spk { position: absolute; font-size: 24px; pointer-events: none; z-index: 3; animation: twinkle 1.3s ease-in-out infinite; }
+  .monwrap.quiet .spk { display: none; }
+  @keyframes twinkle { 0%,100% { opacity: 0; transform: scale(.3) rotate(0); } 50% { opacity: 1; transform: scale(1.25) rotate(35deg); } }
+  @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
   .trainer[data-pose="idle"] { animation: breathe 3s ease-in-out infinite; }
   .trainer[data-pose="throw"] { animation: lunge .5s ease-out; }
   .trainer[data-pose="happy"] { animation: hop .5s ease-in-out 3; }
@@ -152,21 +171,29 @@
     <span><button class="pill" id="trainerbtn" style="font-size:22px;padding:12px 15px">👤</button> <button class="pill" id="gear">⚙️</button></span>
   </div>
   <div class="scene">
-    <div id="trainer" class="trainer" data-pose="idle"></div>
-    <img id="mon" alt="">
-    <div class="ball ball-poke" id="thrown"></div>
+    <div class="monwrap">
+      <img id="mon" alt="">
+      <div class="ball ball-poke" id="thrown"></div>
+    </div>
     <div id="name"></div>
     <div id="msg"></div>
-  </div>
-  <div class="bottom">
-    <button class="pill" id="gift" style="display:none;font-size:18px;padding:10px 18px">🎁 Cadeau: 10 Super Balls!</button>
-    <div class="ball-selector" id="b-select">
+    <div class="stage">
+      <div id="trainer" class="trainer" data-pose="idle"></div>
+      <img id="buddy" alt="">
+      <button id="nobuddy">⭐</button>
+    </div>
+    <div class="side">
+      <button class="pill" id="gift" style="display:none">🎁</button>
+      <div class="ball-selector" id="b-select">
       <div class="ball-opt active" data-ball="poke"><div class="ball ball-poke"></div><span class="ball-badge" id="b-poke-badge">∞</span></div>
       <div class="ball-opt" data-ball="great"><div class="ball ball-great"></div><span class="ball-badge" id="b-great-badge">50</span></div>
       <div class="ball-opt" data-ball="mega"><div class="ball ball-mega"></div><span class="ball-badge" id="b-mega-badge">0</span></div>
       <div class="ball-opt" data-ball="ultra"><div class="ball ball-ultra"></div><span class="ball-badge" id="b-ultra-badge">25</span></div>
       <div class="ball-opt" data-ball="master"><div class="ball ball-master"></div><span class="ball-badge" id="b-master-badge">1</span></div>
+      </div>
     </div>
+  </div>
+  <div class="bottom">
     <button id="throw"><span class="ball ball-poke" id="btn-ball"></span> Gooi!</button>
     <button class="pill" id="next">🔍 Andere Pokémon</button>
   </div>
@@ -175,18 +202,19 @@
 <div class="layer" id="dex">
   <div class="bar"><h2>Mijn Pokédex <span id="dcount"></span></h2><button class="pill" id="dexclose">✖</button></div>
   <div id="reset-timer"></div>
+  <div id="pickhint" style="display:none;margin:0 12px 8px;padding:8px 14px;border-radius:14px;background:#fbbf24;color:#1e3a8a;font-weight:bold;font-size:17px;text-align:center">⭐ Tik op een Pokémon om je buddy te kiezen</div>
   <div id="prog"><i></i></div>
   <div class="tabs"><button class="pill on" data-t="all">Alle</button><button class="pill" data-t="shiny">✨ Shiny</button></div>
   <div id="grid"></div>
 </div>
 
 <div class="layer big" id="detail"><div class="box"><img id="dimg" alt=""><h3 id="dname"></h3><div id="dinfo"></div>
-  <p><button class="pill" id="say">🔊</button> <button class="pill" id="dclose">OK</button></p></div></div>
+  <p><button class="pill" id="say">🔊</button> <button class="pill" id="setbuddy">⭐ Buddy</button> <button class="pill" id="dclose">OK</button></p></div></div>
 
 <div class="layer big" id="reward"><div class="box">
   <h3>🔥 5 op een rij!</h3><p style="font-size:20px;margin:6px 0 12px">Kies je beloning:</p>
-  <button class="pill" id="r-great" style="margin:6px"><span class="ball ball-great" style="--s:34px;vertical-align:middle"></span> 25 Great Balls</button><br>
-  <button class="pill" id="r-ultra" style="margin:6px"><span class="ball ball-ultra" style="--s:34px;vertical-align:middle"></span> 10 Ultra Balls</button>
+  <button class="pill" id="r-great" style="margin:6px"><span class="ball ball-great" style="--s:34px;vertical-align:middle"></span> 10 Great Balls</button><br>
+  <button class="pill" id="r-ultra" style="margin:6px"><span class="ball ball-ultra" style="--s:34px;vertical-align:middle"></span> 5 Ultra Balls</button>
 </div></div>
 
 <div class="layer" id="dress">
@@ -228,12 +256,13 @@
     streak: 0,
     giftDate: '',
     skips: 0,
-    trainer: { hair: 'kort', color: 'bruin', outfit: 'rood' }
+    trainer: { hair: 'kort', color: 'bruin', outfit: 'rood' },
+    buddy: null // { id, shiny } van een gevangen Pokémon
   };
 
   // Dagelijks bijvullen tot de limiet; verdiende extra ballen blijven behouden.
   const refill = b => { const o = { ...b, poke: Infinity }; ['great', 'ultra', 'master'].forEach(k => o[k] = Math.max(+b[k] || 0, LIMITS[k])); o.mega = +b.mega || 0; return o; }; // mega-ballen worden niet bijgevuld, wel bewaard
-  const fresh = () => ({ ...def, balls: { ...def.balls }, trainer: { ...def.trainer }, caught: {}, shinies: {}, v: 2 });
+  const fresh = () => ({ ...def, balls: { ...def.balls }, trainer: { ...def.trainer }, buddy: null, caught: {}, shinies: {}, v: 2 });
   // Oude opslag: een shiny telde mee in de gewone Pokédex. Nu staan ze apart; de gewone vangst telt alleen als ze de gewone echt heeft gevangen.
   function migrate(d) {
     d.shinies = d.shinies || {};
@@ -247,6 +276,9 @@
       }
       d.v = 2;
     }
+    // Buddy moet een Pokémon zijn die je echt hebt gevangen (ook ruimt dit de oude standaard-Pikachu op)
+    const b = d.buddy;
+    d.buddy = b && (b.shiny ? d.shinies : d.caught)[b.id] ? { id: +b.id, shiny: !!b.shiny } : null;
     return d;
   }
 
@@ -290,7 +322,10 @@
     if (!S.sound) return; 
     try { 
       initAudio();
-      if (k === 'throw') tone('sine', 400, 90, 0, .3, .25); 
+      if (k === 'pling') { tone('sine', 1319, 1319, 0, .35, .3); tone('sine', 1976, 1976, .1, .6, .25); }
+      else if (k === 'shiny') [1568, 1976, 2349, 3136, 2349, 3136].forEach((f, i) => tone('triangle', f, f, i * .09, .25, .2));
+      else if (k === 'shinywin') { tone('sine', 1319, 1319, 0, .35, .3); tone('sine', 1976, 1976, .1, .6, .25); [2349, 2637, 3136, 3951].forEach((f, i) => tone('triangle', f, f, .35 + i * .1, .3, .18)); }
+      else if (k === 'throw') tone('sine', 400, 90, 0, .3, .25); 
       else if (k === 'wig') tone('triangle', 200, 300, 0, .12, .3);
       else if (k === 'win') [523, 659, 784, 1047].forEach((f, i) => tone('triangle', f, f, i * .12, .3, .25)); 
       else if (k === 'miss') tone('sine', 350, 180, 0, .35, .25); 
@@ -433,6 +468,9 @@
   $('gift').onclick = claimGift; tickTimer(); setInterval(tickTimer, 1000);
 
   const STREAK_GOAL = 5;
+  const REWARD = { great: 10, ultra: 5 }; // beloning voor een volle 🔥 (was 25 Great / 10 Ultra)
+  // Vangkans: hangt af van hoe zeldzaam de Pokémon is (capture_rate van PokéAPI, 3 = zeer zeldzaam, 255 = heel gewoon)
+  const CATCH = { min: 0.08, spread: 0.47, missBonus: 0.04, cap: 0.95, master: 0.98, mult: { poke: 1, great: 1.3, mega: 1.6, ultra: 2.0 } };
   function updateStreak() {
     $('streak').textContent = `🔥 ${S.streak || 0}/${STREAK_GOAL}`;
     $('streak').classList.toggle('dim', !STREAK_BALLS.includes(selectedBall)); // gedimd bij een bal die niet meetelt
@@ -441,7 +479,7 @@
   function chooseReward() {
     return new Promise(res => {
       $('reward').classList.add('on'); say('Vijf op een rij! Kies je beloning!');
-      const pick = k => { S.balls[k] = (S.balls[k] || 0) + (k === 'great' ? 25 : 10); save(); updateBallUI(); $('reward').classList.remove('on'); res(); };
+      const pick = k => { S.balls[k] = (S.balls[k] || 0) + REWARD[k]; save(); updateBallUI(); $('reward').classList.remove('on'); res(); };
       $('r-great').onclick = () => pick('great'); $('r-ultra').onclick = () => pick('ultra');
     });
   }
@@ -495,9 +533,31 @@
       + L(`outfit-${t.outfit}-${pose}`)
       + L(`hair-${t.hair}-front`, `filter:${f}`);
   }
+  function renderBuddy() {
+    const b = $('buddy'), nb = $('nobuddy');
+    if (!S.buddy) { b.style.display = 'none'; nb.style.display = ''; return; }
+    nb.style.display = 'none'; b.style.display = '';
+    b.onerror = () => { b.style.display = 'none'; nb.style.display = ''; };
+    b.src = ART + (S.buddy.shiny ? 'shiny/' : '') + S.buddy.id + '.png';
+  }
+  let pickMode = false; // true = Pokédex geopend om een buddy te kiezen
+  $('buddy').onclick = $('nobuddy').onclick = () => { pickMode = true; renderDex(); $('dex').classList.add('on'); };
+  function sparkles(on) { // glinsterende sterretjes rond een shiny
+    const w = document.querySelector('.monwrap');
+    w.querySelectorAll('.spk').forEach(e => e.remove());
+    if (!on) return;
+    for (let i = 0; i < 10; i++) {
+      const s = document.createElement('span'), a = i / 10 * Math.PI * 2, r = 30 + (i % 3) * 6;
+      s.className = 'spk'; s.textContent = ['✨', '⭐', '💫'][i % 3];
+      s.style.left = (50 + Math.cos(a) * r) + '%'; s.style.top = (50 + Math.sin(a) * r) + '%';
+      s.style.animationDelay = (i * .13) + 's';
+      w.append(s);
+    }
+  }
   let poseTimer = null;
   function setPose(p, back) { // back = na zoveel ms terug naar idle
     clearTimeout(poseTimer);
+    $('buddy').classList.toggle('hop', p === 'happy');
     const el = $('trainer'); el.dataset.pose = p; el.innerHTML = trainerHTML(p);
     if (back) poseTimer = setTimeout(() => setPose('idle'), back);
   }
@@ -534,6 +594,8 @@
         shiny, 
         name: cap(p.name), 
         legendary: !!(sp.is_legendary || sp.is_mythical),
+        rate: sp.capture_rate ?? ((sp.is_legendary || sp.is_mythical) ? 3 : 120),
+        rare: !!(sp.is_legendary || sp.is_mythical) || (sp.capture_rate ?? 255) <= 45,
         type: p.types?.[0]?.type?.name || 'normal',
         img: ART + (shiny ? 'shiny/' : '') + id + '.png', 
         alt: p.sprites.other?.['official-artwork']?.[shiny ? 'front_shiny' : 'front_default'] || p.sprites.front_default 
@@ -550,22 +612,21 @@
     mon.src = cur.img; 
     mon.onload = () => { mon.style.opacity = 1; };
     $('name').textContent = (shiny ? '✨ ' : '') + cur.name; 
-    $('msg').textContent = shiny ? 'Wow, een shiny Pokémon!' : (cur.legendary ? 'Wauw! Een zeldzame Pokémon!' : 'Een wilde Pokémon!');
+    $('msg').textContent = shiny ? '✨ SHINY! Wow! ✨' : (cur.rare ? 'Wauw! Een zeldzame Pokémon!' : 'Een wilde Pokémon!');
+    mon.classList.toggle('shiny', shiny); $('name').classList.toggle('shiny', shiny); $('msg').classList.toggle('shiny', shiny);
+    document.querySelector('.monwrap').classList.remove('quiet'); sparkles(shiny);
+    if (shiny) { sound('shiny'); sayMix(['Wauw, een shiny!', 'nl-NL']); }
     $('throw').disabled = false; 
     busy = false;
   }
 
   function getCatchParams(ball) {
-    let baseRate = cur.legendary ? 0.35 : 0.65; 
-    baseRate += misses * 0.1; 
+    const base = CATCH.min + CATCH.spread * (cur.rate / 255); // gewoon ~55%, zeldzaam ~10-20%
+    const p = ball === 'master' ? CATCH.master
+      : Math.min(CATCH.cap, (base + Math.min(misses, 5) * CATCH.missBonus) * (CATCH.mult[ball] || 1));
 
-    if (ball === 'great') baseRate += 0.20;
-    if (ball === 'ultra') baseRate += 0.40;
-    if (ball === 'mega') baseRate += 0.30; // Super Ball: tussen Great (+0.20) en Ultra (+0.40)
-    if (ball === 'master') baseRate = 1.0; 
-
-    const success = Math.random() < Math.min(0.98, baseRate);
-    const fleeRate = cur.legendary ? 0.40 : 0.25;
+    const success = Math.random() < p;
+    const fleeRate = 0.12 + 0.28 * (1 - cur.rate / 255); // zeldzame Pokémon rennen vaker weg
     const flees = !success && (Math.random() < fleeRate);
 
     return { success, flees };
@@ -595,6 +656,7 @@
 
     sound('throw');
     setPose('throw');
+    document.querySelector('.monwrap').classList.add('quiet'); // sparkles even weg tijdens het gooien
     $('msg').textContent = '';
     ball.classList.add('fly'); 
     await sleep(800);
@@ -627,9 +689,8 @@
         if (S.streak >= STREAK_GOAL) { S.streak = 0; reward = true; }
         save(); updateStreak();
       }
-      sound('win');
+      sound(cur.shiny ? 'shinywin' : 'pling');
       setPose('happy');
-      confetti();
       sayMix(['Gevangen!', 'nl-NL'], [cur.name, 'en-US']);
       $('msg').textContent = isNew ? (cur.shiny ? '🎉 Gevangen! Nieuw in je shiny Pokédex!' : '🎉 Gevangen! Nieuw in je Pokédex!') : '🎉 Gevangen!';
       if (misses === 0 && !STREAK_BALLS.includes(usedBall)) $('msg').textContent += ' (telt niet mee voor 🔥)';
@@ -659,6 +720,7 @@
     } else {
       sound('miss');
       setPose('sad', 1800);
+      document.querySelector('.monwrap').classList.remove('quiet');
       ball.style.display = 'none';
       mon.style.opacity = 1;
       misses++; if (STREAK_BALLS.includes(usedBall)) breakStreak();
@@ -670,6 +732,7 @@
   }
 
   function renderDex() {
+    $('pickhint').style.display = pickMode ? 'block' : 'none';
     const shinyTab = tab === 'shiny';
     const ids = shinyTab
       ? Object.keys(S.shinies).map(Number).filter(i => i <= S.size).sort((a, b) => (S.shinies[a].at || 0) - (S.shinies[b].at || 0) || a - b) // op volgorde van vangen
@@ -691,10 +754,18 @@
     const c = e.target.closest('.card[data-id]'); 
     if (!c) return; 
     const id = c.dataset.id, sh = tab === 'shiny', d = (sh ? S.shinies : S.caught)[id];
+    if (pickMode) { // buddy kiezen: direct instellen en terug naar het spel
+      S.buddy = { id: +id, shiny: sh }; save(); renderBuddy(); pickMode = false;
+      $('dex').classList.remove('on'); say(d.name, 'en-US'); return;
+    }
     $('dimg').src = ART + (sh ? 'shiny/' : '') + id + '.png'; 
     $('dname').textContent = d.name; 
     $('dinfo').textContent = `Gevangen: ${d.n}×${sh ? '  ✨' : ''}`;
-    $('say').onclick = () => say(d.name, 'en-US'); 
+    $('say').onclick = () => say(d.name, 'en-US');
+    const isBuddy = () => !!S.buddy && S.buddy.id === +id && !!S.buddy.shiny === sh;
+    const bt = () => { $('setbuddy').textContent = isBuddy() ? '⭐ Je buddy ✔' : '⭐ Maak buddy'; };
+    bt();
+    $('setbuddy').onclick = () => { S.buddy = isBuddy() ? null : { id: +id, shiny: sh }; save(); renderBuddy(); bt(); };
     $('detail').classList.add('on'); 
     say(d.name, 'en-US'); 
   };
@@ -705,8 +776,8 @@
     renderDex(); 
   });
 
-  $('dexbtn').onclick = () => { renderDex(); $('dex').classList.add('on'); }; 
-  $('dexclose').onclick = () => $('dex').classList.remove('on'); 
+  $('dexbtn').onclick = () => { pickMode = false; renderDex(); $('dex').classList.add('on'); };
+  $('dexclose').onclick = () => { pickMode = false; $('dex').classList.remove('on'); };
   $('dclose').onclick = () => $('detail').classList.remove('on');
 
   const gear = $('gear'); 
@@ -751,7 +822,7 @@
       save(); 
       fillParentMenu(); 
       $('count').textContent = total(); 
-      alert('Voortgang hersteld!'); 
+      renderBuddy(); setPose('idle'); alert('Voortgang hersteld!'); 
       spawn(); 
     } catch { 
       alert('Die code klopt niet.'); 
@@ -762,7 +833,7 @@
     if (confirm('Alle gevangen Pokémon wissen?') && confirm('Zeker weten? Dit kan niet ongedaan gemaakt worden.')) { 
       S = fresh(); 
       save(); 
-      $('count').textContent = 0; 
+      $('count').textContent = 0; renderBuddy(); 
       spawn(); 
     } 
   };
@@ -777,7 +848,8 @@
     spawn();
   };
 
-  $('count').textContent = total(); 
+  $('count').textContent = total();
+  renderBuddy();
   spawn();
 </script>
 </body>
