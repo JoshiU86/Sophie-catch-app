@@ -365,7 +365,7 @@
   <div id="grid"></div>
 </div>
 
-<!-- Team Rocket Battle Minigame Layer (Lastiger gemaakt!) -->
+<!-- Team Rocket Battle Minigame Layer -->
 <div class="layer big" id="game-layer" style="background: rgba(0,0,0,0.85); flex-direction: column; padding: 20px;">
   <div style="background:#fff; border-radius:24px; padding:20px; width:min(92vw, 360px); text-align:center; box-shadow:var(--shadow-card);">
     <h3 style="color:#b91c1c; margin-top:0;">🔴 Team Rocket Battle (Moeilijk!)</h3>
@@ -426,4 +426,899 @@
 <div class="layer big" id="reward"><div class="box">
   <h3>🔥 5 op een rij!</h3><p style="font-size:16px;margin:3px 0 8px">Kies je beloning:</p>
   <button class="pill" id="r-great" style="margin:4px"><span class="ball ball-great" style="--s:26px;vertical-align:middle"></span> 10 Great Balls</button><br>
-  <button class="pill" id
+  <button class="pill" id="r-ultra" style="margin:4px"><span class="ball ball-ultra" style="--s:26px;vertical-align:middle"></span> 5 Ultra Balls</button>
+</div></div>
+
+<div class="layer big" id="shiny-reward"><div class="box">
+  <h3>✨ 10 Shiny Pokémon! ✨</h3><p style="font-size:15px;margin:3px 0 8px">Kies jouw fantastische beloning:</p>
+  <button class="pill" id="sr-balls" style="margin:4px;width:100%">🎁 10 Super Balls</button><br>
+  <button class="pill" id="sr-spawn" style="margin:4px;width:100%">✨ Direct een nieuwe Shiny!</button>
+</div></div>
+
+<div class="layer" id="dress">
+  <div class="bar"><h2>Mijn trainer</h2><button class="pill" id="dressclose">✔ Klaar</button></div>
+  <div id="dpreview" class="trainer big-t" data-pose="idle"></div>
+  <div class="tabs" id="dtabs"><button class="pill on" data-k="outfit">👕 Outfit</button><button class="pill" data-k="hair">💇 Haar</button><button class="pill" data-k="toy">🧸 Speeltje</button><button class="pill" data-k="name">✏️ Naam</button></div>
+  <div id="dopts"></div>
+</div>
+
+<div class="layer" id="parent" style="background:#f3f4f6">
+  <div class="bar"><h2>Voor ouders</h2><button class="pill" id="pclose">✖</button></div>
+  <div class="row">Geluid <button class="pill" id="p-sound"></button></div>
+  <div class="row">Stem (leest namen voor) <button class="pill" id="p-voice"></button></div>
+  <div class="row">Muziek <button class="pill" id="p-music"></button></div>
+  <div class="row">Aantal Pokémon <select id="p-size" style="font-size:15px"><option value="151">151 (Kanto)</option><option value="251">251</option><option value="386">386</option><option value="1025">1025 (alles)</option></select></div>
+  <div class="row">Back-up <span><button class="pill" id="p-export">Kopieer</button> <button class="pill" id="p-import">Plak</button></span></div>
+  <div class="row">Alles wissen <button class="pill" id="p-reset">Wissen</button></div>
+  <p style="padding:0 14px;color:#6b7280;font-size:12px">De voortgang staat alleen op dit apparaat. Er worden geen gegevens verzameld; alleen plaatjes en namen worden bij PokéAPI opgehaald.</p>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const K = 'pkmnKids', API = 'https://pokeapi.co/api/v2/', ART = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
+  const SHINY = 0.01;
+
+  const LIMITS = { poke: Infinity, great: 50, ultra: 25, master: 1 };
+
+  const def = { 
+    caught: {}, 
+    shinies: {}, 
+    music: true, 
+    size: 151, 
+    sound: true, 
+    voice: true, 
+    balls: { poke: Infinity, great: 50, ultra: 25, master: 1, mega: 0 },
+    lastDate: new Date().toDateString(),
+    streak: 0,
+    giftDate: '',
+    skips: 0,
+    totalCaughtCount: 0,
+    claimedShinyMilestones: 0,
+    trainer: { outfit: 'ash', hair: 'kort', name: '' },
+    toy: 'geen',
+    buddy: null
+  };
+
+  const refill = b => { const o = { ...b, poke: Infinity }; ['great', 'ultra', 'master'].forEach(k => o[k] = Math.max(+b[k] || 0, LIMITS[k])); o.mega = +b.mega || 0; return o; };
+  const fresh = () => ({ ...def, balls: { ...def.balls }, trainer: { ...def.trainer }, toy: 'geen', buddy: null, caught: {}, shinies: {}, v: 4 });
+  
+  function migrate(d) {
+    d.shinies = d.shinies || {};
+    d.trainer = { ...def.trainer, ...(d.trainer || {}) };
+    d.totalCaughtCount = d.totalCaughtCount || Object.values(d.caught || {}).reduce((acc, x) => acc + (x.n || 0), 0) + Object.values(d.shinies || {}).reduce((acc, x) => acc + (x.n || 0), 0);
+    d.claimedShinyMilestones = d.claimedShinyMilestones || 0;
+    return d;
+  }
+
+  let S = (() => { 
+    try { 
+      let data = migrate({ ...def, ...JSON.parse(localStorage.getItem(K)) });
+      let today = new Date().toDateString();
+      if (data.lastDate !== today) {
+        data.balls = refill(data.balls || {});
+        data.lastDate = today;
+      }
+      return data;
+    } catch { 
+      return fresh(); 
+    } 
+  })();
+
+  const save = () => { try { localStorage.setItem(K, JSON.stringify(S)); } catch {} };
+  let cur = null, busy = false, misses = 0, tab = 'all', selectedBall = 'poke';
+  const cap = n => n.replace(/-/g, ' ').replace(/\b\w/g, m => m.toUpperCase());
+  const total = () => Object.keys(S.caught).filter(id => +id <= S.size).length;
+  const totalShinyCount = () => Object.values(S.shinies).reduce((acc, x) => acc + (x.n || 0), 0);
+
+  let ac = null;
+  function initAudio() {
+    if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+    if (ac.state === 'suspended') ac.resume();
+  }
+  window.addEventListener('pointerdown', initAudio, { once: true });
+  window.addEventListener('touchstart', initAudio, { once: true });
+
+  function tone(t, f0, f1, t0, d, v) { 
+    if (!ac) initAudio();
+    try {
+      const o = ac.createOscillator(), g = ac.createGain(), s = ac.currentTime + t0;
+      o.type = t; o.frequency.setValueAtTime(f0, s); if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, s + d);
+      g.gain.setValueAtTime(v, s); g.gain.exponentialRampToValueAtTime(.01, s + d); o.connect(g); g.connect(ac.destination); o.start(s); o.stop(s + d); 
+    } catch {}
+  }
+  
+  function sound(k) { 
+    if (!S.sound) return; 
+    try { 
+      initAudio();
+      if (k === 'pling') { tone('sine', 1319, 1319, 0, .35, .3); tone('sine', 1976, 1976, .1, .6, .25); }
+      else if (k === 'master') { [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => tone('triangle', f, f, i * .08, .3, .25)); }
+      else if (k === 'shiny') [1568, 1976, 2349, 3136, 2349, 3136].forEach((f, i) => tone('triangle', f, f, i * .09, .25, .2));
+      else if (k === 'shinywin') { tone('sine', 1319, 1319, 0, .35, .3); tone('sine', 1976, 1976, .1, .6, .25); [2349, 2637, 3136, 3951].forEach((f, i) => tone('triangle', f, f, .35 + i * .1, .3, .18)); }
+      else if (k === 'throw') tone('sine', 400, 90, 0, .3, .25); 
+      else if (k === 'wig') tone('triangle', 200, 300, 0, .12, .3);
+      else if (k === 'win') [523, 659, 784, 1047].forEach((f, i) => tone('triangle', f, f, i * .12, .3, .25)); 
+      else if (k === 'miss') tone('sine', 350, 180, 0, .35, .25); 
+      else if (k === 'flee') tone('sawtooth', 300, 100, 0, .4, .25);
+    } catch {} 
+  }
+
+  const NOTE = n => { const m = /^([A-G])(#?)(\d)$/.exec(n); const off = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }[m[1]] + (m[2] ? 1 : 0);
+    return 440 * Math.pow(2, (12 * (+m[3] + 1) + off - 69) / 12); };
+  const MEL = [
+    'E5', 0, 'G5', 0, 'E5', 0, 'D5', 'C5',   'C5', 0, 'E5', 0, 'A4', 0, 0, 0,   'A4', 0, 'C5', 0, 'F5', 0, 'E5', 'D5',   'D5', 0, 'G4', 'B4', 'D5', 0, 0, 0,
+    'G5', 0, 'E5', 0, 'C5', 0, 'E5', 'G5',   'A5', 0, 'G5', 0, 'E5', 0, 'C5', 0,   'A5', 0, 'F5', 0, 'A5', 0, 'C6', 0,   'B5', 0, 'G5', 0, 'D5', 'B4', 'G4', 0 ];
+  const BASS = ['C3', 'G3', 'C3', 'G3', 'A2', 'E3', 'A2', 'E3', 'F2', 'C3', 'F2', 'C3', 'G2', 'D3', 'G2', 'D3'];
+  const STEP = 60 / 100 / 2;
+  let mStep = 0, mNext = 0, mTimer = null;
+  function mnote(f, t, d, type, v) {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + .02); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + d + .05);
+  }
+  function musicTick() {
+    while (mNext < ac.currentTime + .4) {
+      const s = mStep % 64;
+      if (MEL[s]) mnote(NOTE(MEL[s]), mNext, STEP * 1.8, 'square', .03);
+      if (s % 2 === 0) mnote(NOTE(BASS[(s / 2) % 16]), mNext, STEP * 1.9, 'triangle', .07);
+      mNext += STEP; mStep++;
+    }
+  }
+  function musicStart() {
+    if (!S.music || mTimer) return;
+    try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume(); mNext = ac.currentTime + .15; mTimer = setInterval(musicTick, 150); } catch {}
+  }
+  function musicStop() { clearInterval(mTimer); mTimer = null; }
+  document.addEventListener('pointerdown', musicStart);
+  document.addEventListener('visibilitychange', () => { document.hidden ? musicStop() : musicStart(); });
+
+  function sayMix(...parts) {
+    if (!S.voice || !('speechSynthesis' in window)) return;
+    try {
+      speechSynthesis.cancel();
+      parts.forEach(([t, l]) => { const u = new SpeechSynthesisUtterance(t); u.lang = l; u.rate = .9; speechSynthesis.speak(u); });
+    } catch {}
+  }
+
+  function say(t, lang = 'nl-NL') { 
+    if (!S.voice || !('speechSynthesis' in window)) return; 
+    try { 
+      speechSynthesis.cancel(); 
+      const u = new SpeechSynthesisUtterance(t); 
+      u.lang = lang; 
+      u.rate = .9; 
+      speechSynthesis.speak(u); 
+    } catch {} 
+  }
+
+  function confetti() { 
+    for (let i = 0; i < 26; i++) { 
+      const s = document.createElement('div'); 
+      s.className = 'star'; 
+      s.textContent = ['⭐', '✨', '🎉', '💛'][i % 4];
+      s.style.left = Math.random() * 95 + 'vw'; 
+      s.style.animationDelay = Math.random() * .6 + 's'; 
+      document.body.append(s); 
+      setTimeout(() => s.remove(), 3200); 
+    } 
+  }
+
+  function updateBallUI() {
+    let today = new Date().toDateString();
+    if (S.lastDate !== today) {
+      S.balls = refill(S.balls || {});
+      S.lastDate = today;
+      save();
+    }
+
+    $('b-poke-badge').textContent = '∞';
+    $('b-great-badge').textContent = S.balls.great;
+    $('b-ultra-badge').textContent = S.balls.ultra;
+    S.balls.mega = +S.balls.mega || 0;
+    $('b-master-badge').textContent = S.balls.master;
+    $('b-mega-badge').textContent = S.balls.mega;
+    updateGift();
+
+    document.querySelectorAll('.ball-opt').forEach(opt => {
+      const bType = opt.dataset.ball;
+      const count = S.balls[bType];
+      if (count <= 0) {
+        opt.classList.add('depleted');
+      } else {
+        opt.classList.remove('depleted');
+      }
+    });
+
+    if (S.balls[selectedBall] <= 0 && selectedBall !== 'poke') {
+      selectBall('poke');
+    }
+  }
+
+  function selectBall(bType) {
+    if (S.balls[bType] <= 0 && bType !== 'poke') return;
+    selectedBall = bType;
+    document.querySelectorAll('.ball-opt').forEach(x => {
+      x.classList.toggle('active', x.dataset.ball === bType);
+    });
+    $('btn-ball').className = `ball ball-${selectedBall}`;
+    $('thrown').className = `ball ball-${selectedBall}`;
+    updateStreak();
+  }
+
+  document.querySelectorAll('.ball-opt').forEach(opt => {
+    opt.onclick = () => {
+      if (busy) return;
+      selectBall(opt.dataset.ball);
+    };
+  });
+
+  const MAX_SKIPS = 3;
+  function updateSkipUI() {
+    const left = Math.max(0, MAX_SKIPS - (S.skips || 0));
+    $('next').textContent = `🔍 Andere Pokémon (${left})`;
+    $('next').classList.toggle('dim', left === 0);
+  }
+  const STREAK_BALLS = ['poke', 'great'];
+  const todayStr = () => new Date().toDateString();
+  function updateGift() { $('gift').style.display = S.giftDate === todayStr() ? 'none' : 'inline-block'; }
+  function claimGift() {
+    if (S.giftDate === todayStr()) return;
+    S.giftDate = todayStr(); S.balls.mega = (+S.balls.mega || 0) + 10; save(); updateBallUI();
+    confetti(); sound('win'); $('msg').textContent = '🎁 10 Super Balls erbij!';
+  }
+  function tickTimer() {
+    const n = new Date(), m = new Date(n); m.setHours(24, 0, 0, 0);
+    const t = Math.max(0, Math.floor((m - n) / 1000)), p = x => String(x).padStart(2, '0');
+    $('reset-timer').textContent = `🔄 Nieuwe ballen over ${Math.floor(t / 3600)}:${p(Math.floor(t % 3600 / 60))}:${p(t % 60)}`;
+    if (S.lastDate !== todayStr()) updateBallUI();
+  }
+  $('gift').onclick = claimGift; tickTimer(); setInterval(tickTimer, 1000);
+
+  const STREAK_GOAL = 5;
+  const REWARD = { great: 10, ultra: 5 };
+  const CATCH = { min: 0.18, spread: 0.50, missBonus: 0.06, cap: 0.95, master: 1.0, mult: { poke: 1, great: 1.3, mega: 1.6, ultra: 2.0 } };
+  function updateStreak() {
+    $('streak').textContent = `🔥 ${S.streak || 0}/${STREAK_GOAL}`;
+    $('streak').classList.toggle('dim', !STREAK_BALLS.includes(selectedBall));
+  }
+  function breakStreak() { if (S.streak) { S.streak = 0; save(); } updateStreak(); }
+  function chooseReward() {
+    return new Promise(res => {
+      $('reward').classList.add('on'); say('Vijf op een rij! Kies je beloning!');
+      const pick = k => { S.balls[k] = (S.balls[k] || 0) + REWARD[k]; save(); updateBallUI(); $('reward').classList.remove('on'); res(); };
+      $('r-great').onclick = () => pick('great'); $('r-ultra').onclick = () => pick('ultra');
+    });
+  }
+
+  function checkShinyReward() {
+    const earnedMilestones = Math.floor(totalShinyCount() / 10);
+    if (earnedMilestones > (S.claimedShinyMilestones || 0)) {
+      return new Promise(res => {
+        $('shiny-reward').classList.add('on');
+        say('Gefeliciteerd! Tien shiny Pokémon gevangen! Kies je beloning!');
+        
+        $('sr-balls').onclick = () => {
+          S.balls.mega = (S.balls.mega || 0) + 10;
+          S.claimedShinyMilestones = earnedMilestones;
+          save(); updateBallUI();
+          $('shiny-reward').classList.remove('on');
+          confetti(); sound('win');
+          res();
+        };
+
+        $('sr-spawn').onclick = () => {
+          S.claimedShinyMilestones = earnedMilestones;
+          save();
+          $('shiny-reward').classList.remove('on');
+          confetti(); sound('shinywin');
+          spawnShinyForced().then(res);
+        };
+      });
+    }
+    return Promise.resolve();
+  }
+
+  async function spawnShinyForced() {
+    busy = true; $('throw').disabled = true;
+    const mon = $('mon');
+    mon.style.opacity = 0;
+    $('name').textContent = ''; $('msg').textContent = '✨ Een speciale Shiny verschijnt! ✨';
+    const id = Math.ceil(Math.random() * S.size);
+    try {
+      const p = await fetch(API + 'pokemon/' + id).then(r => r.json());
+      cur = {
+        id, shiny: true, name: cap(p.name), legendary: false, rate: 120, rare: false,
+        type: p.types?.[0]?.type?.name || 'normal',
+        img: ART + 'shiny/' + id + '.png',
+        alt: p.sprites.front_shiny || p.sprites.front_default
+      };
+    } catch {
+      cur = { id: 25, shiny: true, name: 'Pikachu', legendary: false, rate: 120, rare: false, type: 'electric', img: ART + 'shiny/25.png', alt: ART + 'shiny/25.png' };
+    }
+    misses = 0;
+    setBackground(cur.type);
+    mon.onerror = () => { mon.onerror = null; mon.src = cur.alt; };
+    mon.src = cur.img;
+    mon.onload = () => { mon.style.opacity = 1; };
+    $('name').textContent = '✨ ' + cur.name;
+    $('msg').textContent = '✨ SHINY! Wow! ✨';
+    mon.classList.add('shiny'); $('name').classList.add('shiny'); $('msg').classList.add('shiny');
+    document.querySelector('.monwrap').classList.remove('quiet'); sparkles(true); markDex();
+    sound('shiny'); sayMix(['Wauw, een shiny!', 'nl-NL']);
+    $('throw').disabled = false;
+    busy = false;
+  }
+
+  const TYPES = {
+    normal: { sky: '#bae6fd', ground: '#a7f3d0', e: '☁️' }, fire: { sky: '#fdba74', ground: '#b91c1c', e: '🔥' },
+    water: { sky: '#7dd3fc', ground: '#0284c7', e: '💧' }, electric: { sky: '#fde68a', ground: '#ca8a04', e: '⚡' },
+    grass: { sky: '#bbf7d0', ground: '#16a34a', e: '🍃', down: 1 }, ice: { sky: '#e0f2fe', ground: '#a5d8f3', e: '❄️', down: 1 },
+    fighting: { sky: '#fca5a5', ground: '#92400e', e: '💥' }, poison: { sky: '#d8b4fe', ground: '#7e22ce', e: '🟣' },
+    ground: { sky: '#fde68a', ground: '#a16207', e: '🌵' }, flying: { sky: '#93c5fd', ground: '#e0f2fe', e: '☁️' },
+    psychic: { sky: '#f9a8d4', ground: '#a855f7', e: '🔮' }, bug: { sky: '#d9f99d', ground: '#4d7c0f', e: '🦋' },
+    rock: { sky: '#d6d3d1', ground: '#78716c', e: '🪨' }, ghost: { sky: '#6d28d9', ground: '#1e1b4b', e: '👻' },
+    dragon: { sky: '#818cf8', ground: '#3730a3', e: '🐉' }, dark: { sky: '#4b5563', ground: '#111827', e: '🌙' },
+    steel: { sky: '#cbd5e1', ground: '#64748b', e: '⚙️' }, fairy: { sky: '#fbcfe8', ground: '#f472b6', e: '🌸', down: 1 }
+  };
+
+  function setBackground(type) {
+    const t = TYPES[type] || TYPES.normal;
+    document.body.style.setProperty('--sky', t.sky); document.body.style.setProperty('--ground', t.ground);
+    const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = t.sky;
+    const d = $('deco'); d.innerHTML = '';
+    for (let i = 0; i < 9; i++) {
+      const sp = document.createElement('span'), dur = 9 + Math.random() * 9;
+      sp.textContent = t.e; sp.className = t.down ? 'down' : 'up'; sp.style.left = Math.random() * 92 + 'vw';
+      sp.style.fontSize = (20 + Math.random() * 24) + 'px'; sp.style.animationDuration = dur + 's'; sp.style.animationDelay = (-Math.random() * dur) + 's';
+      d.append(sp);
+    }
+  }
+
+  const OUTFITS = [
+    { id: 'ash', n: '🧢 Ash Ketchum', url: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/trainers/1.png' },
+    { id: 'red', n: '🔴 Trainer Red', url: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/trainers/2.png' },
+    { id: 'blue', n: '🔵 Champion Blue', url: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/trainers/3.png' },
+    { id: 'rocket', n: '🔴 Team Rocket', url: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/trainers/9.png' },
+    { id: 'bruno', n: '🥋 Karateka Bruno', url: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/trainers/10.png' },
+    { id: 'cooltrainer', n: '⭐ Cooltrainer', url: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/trainers/15.png' }
+  ];
+
+  const TOYS = [
+    { id: 'geen', n: 'Geen', e: '' }, 
+    { id: 'pokeball', n: 'Pokébal', e: '🔴' }, 
+    { id: 'tennisbal', n: 'Tennisbal', e: '🎾' }, 
+    { id: 'kussen', n: 'Kussen', e: '💤' },
+    { id: 'bessen', n: 'Oran Berry', e: '🍃' }, 
+    { id: 'knuffel', n: 'Ster', e: '⭐' }
+  ];
+
+  function renderToy() { 
+    const t = TOYS.find(x => x.id === (S.toy || 'geen')) || TOYS[0];
+    $('btoy').textContent = t.e || ''; 
+  }
+
+  function updateNames() {
+    const n = (S.trainer.name || '').trim();
+    const h = document.querySelector('#dex .bar h2'); if (h && h.firstChild) h.firstChild.textContent = (n ? 'Pokédex van ' + n : 'Mijn Pokédex') + ' ';
+    const d = document.querySelector('#dress .bar h2'); if (d) d.textContent = n || 'Mijn trainer';
+  }
+
+  function trainerHTML() {
+    const outfit = OUTFITS.find(o => o.id === S.trainer.outfit) || OUTFITS[0];
+    return `<img src="${outfit.url}" alt="Trainer" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/trainers/1.png'">`;
+  }
+
+  function renderBuddy() {
+    const b = $('buddy'), nb = $('nobuddy'), w = $('buddywrap');
+    renderToy(); updateNames();
+    if (!S.buddy) { w.style.display = 'none'; nb.style.display = ''; return; }
+    nb.style.display = 'none'; w.style.display = '';
+    b.onerror = () => {
+      if (b.src.includes('official-artwork')) {
+        b.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${S.buddy.shiny ? 'shiny/' : ''}${S.buddy.id}.png`;
+      } else {
+        w.style.display = 'none'; nb.style.display = '';
+      }
+    };
+    b.src = ART + (S.buddy.shiny ? 'shiny/' : '') + S.buddy.id + '.png';
+  }
+
+  const BALLNAME = { poke: 'Poké Ball', great: 'Great Ball', mega: 'Super Ball', ultra: 'Ultra Ball', master: 'Master Ball' };
+  function markDex() {
+    const rec = cur && (cur.shiny ? S.shinies : S.caught)[cur.id];
+    const b = rec && (rec.ball || 'poke');
+    $('dexmark').innerHTML = rec ? `<span class="ball ball-${b}" title="Al in je Pokédex"></span>` : '<span class="new">NIEUW</span>';
+  }
+
+  let pickMode = false;
+  $('buddy').onclick = $('nobuddy').onclick = () => { pickMode = true; renderDex(); $('dex').classList.add('on'); };
+  
+  function sparkles(on) {
+    const w = document.querySelector('.monwrap');
+    w.querySelectorAll('.spk').forEach(e => e.remove());
+    if (!on) return;
+    for (let i = 0; i < 10; i++) {
+      const s = document.createElement('span'), a = i / 10 * Math.PI * 2, r = 27 + (i % 3) * 5;
+      s.className = 'spk'; s.textContent = ['✨', '⭐', '💫'][i % 3];
+      s.style.left = (50 + Math.cos(a) * r) + '%'; s.style.top = (50 + Math.sin(a) * r) + '%';
+      s.style.animationDelay = (i * .13) + 's';
+      w.append(s);
+    }
+  }
+
+  let poseTimer = null;
+  function setPose(p, back) {
+    clearTimeout(poseTimer);
+    $('buddywrap').classList.toggle('hop', p === 'happy');
+    const el = $('trainer'); el.dataset.pose = p; el.innerHTML = trainerHTML();
+    if (back) poseTimer = setTimeout(() => setPose('idle'), back);
+  }
+
+  let dtab = 'outfit';
+  function renderDress() {
+    $('dpreview').innerHTML = trainerHTML();
+    document.querySelectorAll('#dtabs .pill').forEach(b => b.classList.toggle('on', b.dataset.k === dtab));
+    if (dtab === 'name') {
+      $('dopts').innerHTML = '<div style="width:100%;text-align:center"><input id="tname-in" maxlength="14" placeholder="Hoe heet je?" style="font-size:22px;padding:8px 12px;border-radius:12px;border:3px solid #1e3a8a;width:min(90%,260px);text-align:center"></div>';
+      const inp = $('tname-in'); inp.value = S.trainer.name || '';
+      inp.oninput = () => { S.trainer.name = inp.value.slice(0, 14); save(); updateNames(); };
+      return;
+    }
+    const list = { outfit: OUTFITS, toy: TOYS }[dtab] || OUTFITS;
+    const curv = dtab === 'toy' ? (S.toy || 'geen') : S.trainer.outfit;
+    $('dopts').innerHTML = list.map(o => `<button class="pill ${curv === o.id ? 'on' : ''}" data-id="${o.id}">${o.e ? o.e + ' ' : ''}${o.n}</button>`).join('');
+  }
+
+  $('dopts').onclick = e => { 
+    const b = e.target.closest('[data-id]'); 
+    if (!b) return; 
+    if (dtab === 'toy') S.toy = b.dataset.id; 
+    else S.trainer.outfit = b.dataset.id; 
+    save(); 
+    renderDress(); 
+    renderToy(); 
+    setPose($('trainer').dataset.pose); 
+  };
+
+  $('dtabs').onclick = e => { const b = e.target.closest('[data-k]'); if (!b) return; dtab = b.dataset.k; renderDress(); };
+  $('trainerbtn').onclick = () => { renderDress(); $('dress').classList.add('on'); };
+  $('dressclose').onclick = () => { $('dress').classList.remove('on'); setPose('idle'); };
+
+  // --- TEAM ROCKET BATTLE LOGIC (Met 5 Great Balls of 5 Super Balls als beloning) ---
+  let playerHp = 100, oppHp = 100;
+
+  $('gamebtn').onclick = () => {
+    $('battle-notice').style.display = 'none';
+    $('game-setup').style.display = 'block';
+    $('game-play').style.display = 'none';
+    $('game-win').style.display = 'none';
+    $('game-layer').classList.add('on');
+  };
+
+  $('game-close').onclick = () => $('game-layer').classList.remove('on');
+  $('game-quit').onclick = () => {
+    $('game-setup').style.display = 'block';
+    $('game-play').style.display = 'none';
+  };
+
+  $('start-battle').onclick = () => {
+    playerHp = 100;
+    oppHp = 100;
+    updateHpBars();
+    $('game-setup').style.display = 'none';
+    $('game-play').style.display = 'block';
+
+    const pImg = $('battle-player-img');
+    if (S.buddy) {
+      pImg.src = ART + (S.buddy.shiny ? 'shiny/' : '') + S.buddy.id + '.png';
+    } else {
+      pImg.src = ART + '25.png';
+    }
+
+    $('battle-opp-img').src = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/109.png';
+    $('battle-log').textContent = 'Team Rocket Grunt is krachtig! Val slim aan!';
+  };
+
+  function updateHpBars() {
+    $('player-hp').style.width = Math.max(0, playerHp) + '%';
+    $('opp-hp').style.width = Math.max(0, oppHp) + '%';
+  }
+
+  $('atk-fast').onclick = () => {
+    if (playerHp <= 0 || oppHp <= 0) return;
+    sound('throw');
+    const dmgToOpp = Math.floor(Math.random() * 10) + 10;
+    oppHp -= dmgToOpp;
+    updateHpBars();
+    $('battle-log').textContent = `⚡ Je raakt Team Rocket voor ${dmgToOpp} schade!`;
+    checkBattleEnd();
+    if (oppHp > 0) setTimeout(aiAttack, 500);
+  };
+
+  $('atk-charged').onclick = () => {
+    if (playerHp <= 0 || oppHp <= 0) return;
+    sound('pling');
+    const critical = Math.random() < 0.35;
+    const dmgToOpp = critical ? 35 : 15;
+    oppHp -= dmgToOpp;
+    updateHpBars();
+    $('battle-log').textContent = critical ? `💥 KRITISCHE TREFFER! ${dmgToOpp} schade!` : `💥 Krachtige aanval deed ${dmgToOpp} schade!`;
+    checkBattleEnd();
+    if (oppHp > 0) setTimeout(aiAttack, 600);
+  };
+
+  function aiAttack() {
+    if (playerHp <= 0 || oppHp <= 0) return;
+    sound('miss');
+    const dmgToPlayer = Math.floor(Math.random() * 18) + 16; 
+    playerHp -= dmgToPlayer;
+    updateHpBars();
+    $('battle-log').textContent = `🔴 Team Rocket deelt een harde klap uit van ${dmgToPlayer} schade!`;
+    checkBattleEnd();
+  }
+
+  function checkBattleEnd() {
+    if (oppHp <= 0) {
+      sound('win');
+      confetti();
+      $('game-play').style.display = 'none';
+      $('battle-win-msg').textContent = 'Knap gedaan! Je hebt Team Rocket verslagen.';
+      $('game-win').style.display = 'block';
+    } else if (playerHp <= 0) {
+      sound('flee');
+      $('battle-log').textContent = 'Je Pokémon is verslagen door Team Rocket...';
+      setTimeout(() => {
+        $('game-setup').style.display = 'block';
+        $('game-play').style.display = 'none';
+        const notice = $('battle-notice');
+        notice.textContent = 'Je hebt verloren! Probeer het nog eens met een sterkere strategie.';
+        notice.style.display = 'block';
+      }, 1500);
+    }
+  }
+
+  // Beloningen na winst: 5 Great Balls of 5 Super Balls (mega)
+  $('rew-great').onclick = () => {
+    S.balls.great = (S.balls.great || 0) + 5;
+    save(); updateBallUI();
+    $('game-layer').classList.remove('on');
+  };
+
+  $('rew-mega').onclick = () => {
+    S.balls.mega = (S.balls.mega || 0) + 5;
+    save(); updateBallUI();
+    $('game-layer').classList.remove('on');
+  };
+  // ----------------------------------------
+
+  async function spawn() {
+    setPose('idle');
+    updateBallUI(); updateStreak(); updateSkipUI();
+    busy = true; $('throw').disabled = true; 
+    const mon = $('mon');
+    mon.classList.remove('flee');
+    mon.style.opacity = 0; 
+    $('name').textContent = ''; 
+    $('msg').textContent = '…'; $('dexmark').innerHTML = '';
+    
+    const id = Math.ceil(Math.random() * S.size), shiny = Math.random() < SHINY;
+    try {
+      const [p, sp] = await Promise.all([
+        fetch(API + 'pokemon/' + id).then(r => r.json()), 
+        fetch(API + 'pokemon-species/' + id).then(r => r.json()).catch(() => ({}))
+      ]);
+      cur = { 
+        id, 
+        shiny, 
+        name: cap(p.name), 
+        legendary: !!(sp.is_legendary || sp.is_mythical),
+        rate: sp.capture_rate ?? ((sp.is_legendary || sp.is_mythical) ? 3 : 120),
+        rare: !!(sp.is_legendary || sp.is_mythical) || (sp.capture_rate ?? 255) <= 45,
+        type: p.types?.[0]?.type?.name || 'normal',
+        img: ART + (shiny ? 'shiny/' : '') + id + '.png', 
+        alt: p.sprites.other?.['official-artwork']?.[shiny ? 'front_shiny' : 'front_default'] || p.sprites.front_default || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${shiny ? 'shiny/' : ''}${id}.png`
+      };
+    } catch { 
+      cur = null; 
+      $('msg').textContent = 'Geen internet 😢 Tik op "Andere Pokémon"'; 
+      busy = false; 
+      return; 
+    }
+    misses = 0;
+    setBackground(cur.type);
+    mon.onerror = () => { mon.onerror = null; mon.src = cur.alt; }; 
+    mon.src = cur.img; 
+    mon.onload = () => { mon.style.opacity = 1; };
+    $('name').textContent = (shiny ? '✨ ' : '') + cur.name; 
+    $('msg').textContent = shiny ? '✨ SHINY! Wow! ✨' : (cur.rare ? 'Wauw! Een zeldzame Pokémon!' : 'Een wilde Pokémon!');
+    mon.classList.toggle('shiny', shiny); $('name').classList.toggle('shiny', shiny); $('msg').classList.toggle('shiny', shiny);
+    document.querySelector('.monwrap').classList.remove('quiet'); sparkles(shiny); markDex();
+    if (shiny) { sound('shiny'); sayMix(['Wauw, een shiny!', 'nl-NL']); }
+    $('throw').disabled = false; 
+    busy = false;
+  }
+
+  function getCatchParams(ball) {
+    if (ball === 'master') return { success: true, flees: false };
+    const base = CATCH.min + CATCH.spread * (cur.rate / 255);
+    const p = Math.min(CATCH.cap, (base + Math.min(misses, 5) * CATCH.missBonus) * (CATCH.mult[ball] || 1));
+    const success = Math.random() < p;
+    const fleeRate = 0.08 + 0.22 * (1 - cur.rate / 255);
+    const flees = !success && (Math.random() < fleeRate);
+    return { success, flees };
+  }
+
+  async function throwBall() {
+    if (busy || !cur) return;
+    const usedBall = selectedBall;
+
+    if (S.balls[selectedBall] <= 0 && selectedBall !== 'poke') {
+      $('msg').textContent = 'Op voorraad voor vandaag! Kies een andere bal.';
+      return;
+    }
+
+    if (selectedBall !== 'poke') {
+      S.balls[selectedBall]--;
+      save();
+      updateBallUI();
+    }
+
+    busy = true; 
+    $('throw').disabled = true; 
+    $('next').disabled = true;
+    
+    const ball = $('thrown'), mon = $('mon');
+    ball.className = `ball ball-${usedBall}`;
+    
+    const { success, flees } = getCatchParams(usedBall);
+
+    if (usedBall === 'master') {
+      sound('master');
+      setPose('throw');
+      document.querySelector('.monwrap').classList.add('quiet');
+      $('msg').textContent = '👑 MASTER BALL! 👑';
+      say('Magische Master Ball!');
+      
+      ball.classList.add('fly-master');
+      await sleep(900);
+      
+      mon.style.opacity = 0;
+      ball.classList.remove('fly-master');
+      ball.style.display = 'block';
+      confetti();
+
+      for (let i = 0; i < 3; i++) {
+        await sleep(400);
+        ball.classList.remove('wig');
+        void ball.offsetWidth;
+        ball.classList.add('wig');
+        sound('wig');
+        $('msg').textContent = '🌟 '.repeat(i + 1);
+      }
+      await sleep(600);
+    } else {
+      sound('throw');
+      setPose('throw');
+      document.querySelector('.monwrap').classList.add('quiet');
+      $('msg').textContent = '';
+      ball.classList.add('fly'); 
+      await sleep(800);
+      
+      mon.style.opacity = 0; 
+      ball.classList.remove('fly'); 
+      ball.style.display = 'block';
+
+      const wiggles = success ? 3 : Math.floor(Math.random() * 2) + 1;
+      for (let i = 0; i < wiggles; i++) { 
+        await sleep(i ? 1000 : 400); 
+        ball.classList.remove('wig'); 
+        void ball.offsetWidth; 
+        ball.classList.add('wig'); 
+        sound('wig'); 
+        $('msg').textContent = '• '.repeat(i + 1); 
+      }
+      await sleep(1100);
+    }
+
+    if (success) {
+      const bucket = cur.shiny ? S.shinies : S.caught;
+      const c = bucket[cur.id] || (bucket[cur.id] = { n: 0, name: cur.name, at: Date.now() }), isNew = c.n === 0;
+      c.n++; c.b = c.b || {}; c.b[usedBall] = (c.b[usedBall] || 0) + 1; if (isNew) c.ball = usedBall;
+      
+      S.totalCaughtCount = (S.totalCaughtCount || 0) + 1;
+      let earnedMasterBalls = Math.floor(S.totalCaughtCount / 100);
+      let prevMasterBalls = Math.floor((S.totalCaughtCount - 1) / 100);
+      let gotMasterBall = earnedMasterBalls > prevMasterBalls;
+      if (gotMasterBall) {
+        S.balls.master = (S.balls.master || 0) + 1;
+      }
+
+      save();
+      $('count').textContent = total();
+      S.skips = 0; save(); updateSkipUI();
+      let reward = false;
+      if (misses === 0 && STREAK_BALLS.includes(usedBall)) {
+        S.streak = (S.streak || 0) + 1;
+        if (S.streak >= STREAK_GOAL) { S.streak = 0; reward = true; }
+        save(); updateStreak();
+      }
+      sound(usedBall === 'master' ? 'shinywin' : (cur.shiny ? 'shinywin' : 'pling'));
+      setPose('happy');
+      sayMix(['Gevangen!', 'nl-NL'], [cur.name, 'en-US']);
+      
+      let msgText = isNew ? (cur.shiny ? '🎉 Gevangen! Nieuw in je shiny Pokédex!' : '🎉 Gevangen! Nieuw in je Pokédex!') : '🎉 Gevangen!';
+      if (gotMasterBall) {
+        msgText += ' 🏆 100 vangsten! Master Ball erbij!';
+      }
+      $('msg').textContent = msgText;
+
+      await sleep(3200); 
+      ball.style.display = 'none'; 
+      $('next').disabled = false; 
+
+      if (reward) await chooseReward();
+      if (cur.shiny) await checkShinyReward();
+
+      await spawn();
+    } else if (flees) {
+      sound('miss');
+      setPose('sad');
+      ball.style.display = 'none';
+      mon.style.opacity = 1;
+      S.skips = 0; save(); updateSkipUI();
+      if (STREAK_BALLS.includes(usedBall)) breakStreak();
+      $('msg').textContent = 'Oh nee! Hij is uit de bal gekomen...';
+      await sleep(1000);
+      
+      sound('flee');
+      mon.classList.add('flee');
+      $('msg').textContent = '💨 ' + cur.name + ' is weggerend!';
+      sayMix([cur.name, 'en-US'], ['is weggerend!', 'nl-NL']);
+      await sleep(2500);
+      
+      $('next').disabled = false;
+      await spawn();
+    } else {
+      sound('miss');
+      setPose('sad', 1800);
+      document.querySelector('.monwrap').classList.remove('quiet');
+      ball.style.display = 'none';
+      mon.style.opacity = 1;
+      misses++; if (STREAK_BALLS.includes(usedBall)) breakStreak();
+      $('msg').textContent = 'Oei, hij is ontsnapt! Probeer opnieuw! 💪'; 
+      $('throw').disabled = false; 
+      $('next').disabled = false; 
+      busy = false;
+    }
+  }
+
+  function renderDex() {
+    $('pickhint').style.display = pickMode ? 'block' : 'none';
+    const shinyTab = tab === 'shiny';
+    const ids = shinyTab
+      ? Object.keys(S.shinies).map(Number).filter(i => i <= S.size).sort((a, b) => (S.shinies[a].at || 0) - (S.shinies[b].at || 0) || a - b)
+      : Array.from({ length: S.size }, (_, i) => i + 1);
+    const n = shinyTab ? ids.length : total();
+    $('dcount').textContent = shinyTab ? '✨ ' + n : n + '/' + S.size;
+    $('prog').style.display = shinyTab ? 'none' : '';
+    if (!shinyTab) $('prog').firstElementChild.style.width = (n / S.size * 100) + '%';
+    let h = '';
+    for (const id of ids) {
+      const c = shinyTab ? S.shinies[id] : S.caught[id];
+      const imgSrc = `${ART}${shinyTab ? 'shiny/' : ''}${id}.png`;
+      const fallbackSrc = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${shinyTab ? 'shiny/' : ''}${id}.png`;
+      h += c ? `<div class="card" data-id="${id}">${c.ball ? `<span class="ball ball-${c.ball} cb" title="${BALLNAME[c.ball]}"></span>` : ''}<img loading="lazy" src="${imgSrc}" onerror="this.onerror=null;this.src='${fallbackSrc}'" alt=""><div>${shinyTab ? '✨ ' : ''}${c.name}</div></div>`
+             : `<div class="card no"><img loading="lazy" src="${ART}${id}.png" onerror="this.onerror=null;this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png'" alt=""><div>${id}</div></div>`;
+    }
+    $('grid').innerHTML = h || '<p style="grid-column:1/-1;text-align:center;font-size:16px;color:#6b7280">Nog geen shiny Pokémon…<br>Blijf vangen! ✨</p>';
+  }
+
+  $('grid').onclick = e => { 
+    const c = e.target.closest('.card[data-id]'); 
+    if (!c) return; 
+    const id = c.dataset.id, sh = tab === 'shiny', d = (sh ? S.shinies : S.caught)[id];
+    if (pickMode) {
+      S.buddy = { id: +id, shiny: sh }; save(); renderBuddy(); pickMode = false;
+      $('dex').classList.remove('on'); say(d.name, 'en-US'); return;
+    }
+    const dimg = $('dimg');
+    dimg.onerror = () => { dimg.onerror = null; dimg.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${sh ? 'shiny/' : ''}${id}.png`; };
+    dimg.src = ART + (sh ? 'shiny/' : '') + id + '.png'; 
+    $('dname').textContent = d.name; 
+    const bs = d.b ? Object.entries(d.b) : (d.ball ? [[d.ball, d.n]] : []);
+    $('dinfo').innerHTML = `Gevangen: ${d.n}×${sh ? '  ✨' : ''}` + (bs.length ? '<div style="margin-top:4px;font-size:15px;line-height:1.6">' + bs.map(([k, n]) => `<span class="ball ball-${k}" style="--s:18px;vertical-align:middle;border-width:2px"></span> ${BALLNAME[k] || k} ×${n}`).join('<br>') + '</div>' : '');
+    $('say').onclick = () => say(d.name, 'en-US');
+    const isBuddy = () => !!S.buddy && S.buddy.id === +id && !!S.buddy.shiny === sh;
+    const bt = () => { $('setbuddy').textContent = isBuddy() ? '⭐ Je buddy ✔' : '⭐ Maak buddy'; };
+    bt();
+    $('setbuddy').onclick = () => { S.buddy = isBuddy() ? null : { id: +id, shiny: sh }; save(); renderBuddy(); bt(); };
+    $('detail').classList.add('on'); 
+    say(d.name, 'en-US'); 
+  };
+
+  document.querySelectorAll('.tabs .pill').forEach(b => b.onclick = () => { 
+    tab = b.dataset.t; 
+    document.querySelectorAll('.tabs .pill').forEach(x => x.classList.toggle('on', x === b)); 
+    renderDex(); 
+  });
+
+  $('dexbtn').onclick = () => { pickMode = false; renderDex(); $('dex').classList.add('on'); };
+  $('dexclose').onclick = () => { pickMode = false; $('dex').classList.remove('on'); };
+  $('dclose').onclick = () => $('detail').classList.remove('on');
+
+  const gear = $('gear'); 
+  let hold = null;
+  const startHold = (e) => { 
+    if (e.cancelable) e.preventDefault();
+    hold = setTimeout(() => { fillParentMenu(); $('parent').classList.add('on'); }, 1500); 
+  };
+  const stopHold = () => clearTimeout(hold);
+
+  ['touchstart', 'mousedown', 'pointerdown'].forEach(ev => gear.addEventListener(ev, startHold, { passive: false }));
+  ['touchend', 'touchcancel', 'mouseup', 'mouseleave', 'pointerup', 'pointercancel'].forEach(ev => gear.addEventListener(ev, stopHold));
+
+  function fillParentMenu() { 
+    $('p-sound').textContent = S.sound ? 'Aan' : 'Uit'; 
+    $('p-voice').textContent = S.voice ? 'Aan' : 'Uit'; 
+    $('p-music').textContent = S.music ? 'Aan' : 'Uit';
+    $('p-size').value = S.size; 
+  }
+
+  $('pclose').onclick = () => $('parent').classList.remove('on');
+  $('p-sound').onclick = () => { S.sound = !S.sound; save(); fillParentMenu(); }; 
+  $('p-voice').onclick = () => { S.voice = !S.voice; save(); fillParentMenu(); };
+  $('p-music').onclick = () => { S.music = !S.music; save(); fillParentMenu(); S.music ? musicStart() : musicStop(); };
+  $('p-size').onchange = e => { S.size = +e.target.value; save(); $('count').textContent = total(); spawn(); };
+  
+  $('p-export').onclick = async () => { 
+    const code = btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+    try { 
+      await navigator.clipboard.writeText(code); 
+      alert('Back-upcode gekopieerd naar klembord!'); 
+    } catch { 
+      prompt('Kopieer deze back-upcode:', code); 
+    } 
+  };
+
+  $('p-import').onclick = () => { 
+    const c = prompt('Plak de back-upcode:'); 
+    if (!c) return;
+    try { 
+      S = migrate({ ...def, ...JSON.parse(decodeURIComponent(escape(atob(c.trim())))) }); 
+      save(); 
+      fillParentMenu(); 
+      $('count').textContent = total(); 
+      renderBuddy(); setPose('idle'); alert('Voortgang hersteld!'); 
+      spawn(); 
+    } catch { 
+      alert('Die code klopt niet.'); 
+    } 
+  };
+
+  $('p-reset').onclick = () => { 
+    if (confirm('Alle gevangen Pokémon wissen?') && confirm('Zeker weten? Dit kan niet ongedaan gemaakt worden.')) { 
+      S = fresh(); 
+      save(); 
+      $('count').textContent = 0; renderBuddy(); 
+      spawn(); 
+    } 
+  };
+
+  $('throw').onclick = throwBall;
+  $('next').onclick = () => {
+    if (busy && cur) return;
+    if (!cur) { spawn(); return; }
+    if ((S.skips || 0) >= MAX_SKIPS) { $('msg').textContent = 'Je hebt 3 keer gezocht. Probeer deze Pokémon te vangen! 💪'; return; }
+    S.skips = (S.skips || 0) + 1; save(); updateSkipUI();
+    try { speechSynthesis.cancel(); } catch {}
+    spawn();
+  };
+
+  $('count').textContent = total();
+  renderBuddy();
+  spawn();
+</script>
+</body>
+</html>
