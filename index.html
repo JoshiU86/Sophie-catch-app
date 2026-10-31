@@ -246,10 +246,11 @@
   .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 14px; background: #fff; margin: 4px 10px; border-radius: 12px; font-size: 15px; font-weight: 600; }
   .row button { font-size: 14px; padding: 6px 12px; min-height: 36px; }
 
-  /* Mini-game Styling */
-  #ttt-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 260px; height: 260px; margin: 12px auto; }
-  .ttt-cell { background: #fff; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 38px; cursor: pointer; box-shadow: var(--shadow-soft); transition: transform 0.1s ease; }
-  .ttt-cell:active { transform: scale(0.92); }
+  /* Battle Minigame Styling */
+  .battle-btn { width: 100%; margin: 6px 0; font-size: 16px; padding: 12px; background: #fff; border: 2.5px solid #cbd5e1; border-radius: 14px; color: var(--primary); font-weight: 700; cursor: pointer; transition: all 0.1s ease; }
+  .battle-btn:active { background: #f1f5f9; transform: scale(0.98); }
+  .hp-bar-container { background: #e2e8f0; border-radius: 99px; height: 14px; width: 100%; overflow: hidden; margin: 6px 0; border: 2px solid #cbd5e1; }
+  .hp-bar-fill { background: #22c55e; height: 100%; width: 100%; transition: width 0.3s ease; }
 
   .trainer { position: relative; aspect-ratio: 2 / 3; pointer-events: none; }
   .trainer img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
@@ -372,33 +373,58 @@
   <div id="grid"></div>
 </div>
 
-<!-- Minigame Layer -->
+<!-- Team Rocket Battle Minigame Layer -->
 <div class="layer big" id="game-layer" style="background: rgba(0,0,0,0.85); flex-direction: column; padding: 20px;">
   <div style="background:#fff; border-radius:24px; padding:20px; width:min(92vw, 360px); text-align:center; box-shadow:var(--shadow-card);">
-    <h3 style="color:var(--primary); margin-top:0;">🎮 Poké Boter, Kaas & Eieren</h3>
+    <h3 style="color:var(--primary); margin-top:0;">⚔️ Team Rocket Battle</h3>
     
     <div id="game-setup">
-      <p style="font-size:15px; color:#4b5563; margin-bottom:12px;">Tegen wie wil je spelen?</p>
-      <button class="pill" id="choose-buddy" style="width:100%; margin-bottom:8px; background:#dbeafe;">⭐ Je Huidige Buddy</button>
+      <p style="font-size:14px; color:#4b5563; margin-bottom:10px;">Versla de tegenstander in een snelle Pokémon GO stijl gevecht!</p>
+      <div style="display:flex; justify-content:center; gap:20px; margin-bottom:14px; align-items:center;">
+        <div style="text-align:center;">
+          <img id="setup-buddy-img" src="" alt="Buddy" style="width:60px; height:60px; object-fit:contain; display:none; margin:0 auto;" onerror="this.style.display='none'">
+          <div id="setup-buddy-fallback" style="font-size:36px;">⭐</div>
+          <span style="font-size:12px; font-weight:bold; color:var(--primary);">Jouw Buddy</span>
+        </div>
+        <div style="font-size:24px; font-weight:bold; color:#94a3b8;">VS</div>
+        <div style="text-align:center;">
+          <img id="setup-rocket-img" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/109.png" alt="Team Rocket" style="width:60px; height:60px; object-fit:contain; margin:0 auto;">
+          <span style="font-size:12px; font-weight:bold; color:#b91c1c;">Team Rocket</span>
+        </div>
+      </div>
+      <div id="battle-notice" style="display:none; background:#fef2f2; color:#991b1b; padding:8px; border-radius:10px; font-weight:bold; font-size:13px; margin-bottom:10px;"></div>
+      <button class="pill" id="choose-buddy" style="width:100%; margin-bottom:8px; background:#dbeafe;">Vecht met je Buddy</button>
       <br>
-      <button class="pill" id="choose-rocket" style="width:100%; margin-bottom:12px; background:#ffeeee; color:#b91c1c;">🔴 Team Rocket</button>
+      <button class="pill" id="choose-rocket" style="width:100%; margin-bottom:12px; background:#ffeeee; color:#b91c1c;">Vecht tegen Team Rocket</button>
       <br>
       <button class="pill" id="game-close" style="background:#e5e7eb;">Sluiten</button>
     </div>
 
     <div id="game-play" style="display:none;">
-      <p id="game-status" style="font-weight:bold; color:#1e3a8a; font-size:16px; margin:4px 0 8px;">Jij bent aan de beurt! (🔴)</p>
-      <div id="ttt-board">
-        <div class="ttt-cell" data-i="0"></div><div class="ttt-cell" data-i="1"></div><div class="ttt-cell" data-i="2"></div>
-        <div class="ttt-cell" data-i="3"></div><div class="ttt-cell" data-i="4"></div><div class="ttt-cell" data-i="5"></div>
-        <div class="ttt-cell" data-i="6"></div><div class="ttt-cell" data-i="7"></div><div class="ttt-cell" data-i="8"></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div style="text-align:left; width:45%;">
+          <span style="font-size:11px; font-weight:bold; color:#4b5563;">Tegenstander</span>
+          <div class="hp-bar-container"><div id="opp-hp" class="hp-bar-fill"></div></div>
+          <img id="battle-opp-img" src="" alt="" style="width:50px; height:50px; object-fit:contain; display:block; margin:0 auto;">
+        </div>
+        <div style="text-align:right; width:45%;">
+          <span style="font-size:11px; font-weight:bold; color:#4b5563;">Jij</span>
+          <div class="hp-bar-container"><div id="player-hp" class="hp-bar-fill"></div></div>
+          <img id="battle-player-img" src="" alt="" style="width:50px; height:50px; object-fit:contain; display:block; margin:0 auto;">
+        </div>
       </div>
-      <button class="pill" id="game-quit" style="margin-top:10px; background:#e5e7eb;">Stoppen</button>
+      <div id="battle-log" style="font-size:14px; font-weight:700; color:var(--primary); margin:10px 0; background:#f0f9ff; padding:10px; border-radius:12px; min-height:45px;">Tik op een aanval om te vechten!</div>
+      <div id="battle-actions">
+        <button class="battle-btn" id="atk-fast">⚡ Snelle Aanval (Tik snel!)</button>
+        <button class="battle-btn" id="atk-charged" style="background:#fef08a; color:#854d0e;">💥 Krachtige Aanval</button>
+      </div>
+      <button class="pill" id="game-quit" style="margin-top:10px; background:#e5e7eb; font-size:13px;">Stoppen</button>
     </div>
 
     <div id="game-win" style="display:none;">
       <h3 style="color:#16a34a;">🎉 Gewonnen!</h3>
-      <p style="font-size:15px; margin:8px 0;">Kies jouw beloning:</p>
+      <p id="battle-win-msg" style="font-size:14px; margin:6px 0 12px; color:#4b5563;"></p>
+      <p style="font-size:15px; margin:4px 0;">Kies jouw beloning:</p>
       <button class="pill" id="rew-mega" style="width:100%; margin:4px; background:#fce7f3; color:#db2777;">🎁 5 Super Balls</button><br>
       <button class="pill" id="rew-ultra" style="width:100%; margin:4px; background:#fef08a; color:#854d0e;">⚡ 2 Ultra Balls</button>
     </div>
@@ -853,15 +879,25 @@
     const hairStyle = col.f === 'rainbow' ? '' : `filter:${col.f}`;
     const hairClass = col.cls ? `class="${col.cls}"` : '';
 
+    // Automatische dynamische kleuring per outfit thema zodat elk pakje echt een unieke kleur krijgt!
+    const outfitFilters = {
+      rood: 'none', blauw: 'hue-rotate(180deg) saturate(1.5)', groen: 'hue-rotate(90deg) saturate(1.5)',
+      geel: 'hue-rotate(30deg) saturate(2)', ninja: 'grayscale(1) brightness(0.3)', prinses: 'hue-rotate(290deg) saturate(1.8)',
+      pyjama: 'hue-rotate(220deg) brightness(1.2)', strand: 'hue-rotate(140deg) saturate(1.5)', chef: 'grayscale(1) brightness(1.8)',
+      astro: 'grayscale(0.5) contrast(1.5)', held: 'hue-rotate(340deg) saturate(2.5)', feest: 'hue-rotate(50deg) saturate(3)'
+    };
+    const baseOutfitFilter = outfitFilters[t.outfit] || 'none';
+
     const oc = OCOLORS.find(c => c.id === t.ocolor) || OCOLORS[0];
-    const outfitStyle = oc.f === 'rainbow' ? '' : `filter:${oc.f}`;
+    const userOutfitFilter = oc.f === 'rainbow' ? '' : oc.f;
+    const finalFilter = oc.id !== 'orig' ? userOutfitFilter : baseOutfitFilter;
     const outfitClass = oc.cls ? `class="${oc.cls}"` : '';
 
     const L = (name, style = '', extra = '') => `<img src="trainer/${name}.png" alt="" style="${style}" onerror="this.onerror=null; if(!this.src.includes('outfit-rood')) { this.src='trainer/outfit-rood-${pose}.png'; } else { this.style.display='none'; }" ${extra}>`;
     return '<span class="tfb">🧒</span>'
       + L(`hair-${t.hair}-back`, hairStyle, hairClass)
       + L(`base-${pose}`, '', `onload="const p=this.parentNode.querySelector('.tfb');if(p)p.style.display='none'"`)
-      + L(`outfit-${t.outfit}-${pose}`, outfitStyle, outfitClass)
+      + L(`outfit-rood-${pose}`, `filter:${finalFilter}`, outfitClass)
       + L(`hair-${t.hair}-front`, hairStyle, hairClass);
   }
 
@@ -941,12 +977,20 @@
   $('trainerbtn').onclick = () => { renderDress(); $('dress').classList.add('on'); };
   $('dressclose').onclick = () => { $('dress').classList.remove('on'); setPose('idle'); };
 
-  // --- TIC-TAC-TOE MINI-GAME LOGIC ---
-  let tttBoard = ['', '', '', '', '', '', '', '', ''];
-  let tttTurn = 'player'; // player ('X') vs ai ('O')
-  let tttOpponent = 'buddy'; // 'buddy' or 'rocket'
+  // --- TEAM ROCKET BATTLE LOGIC ---
+  let playerHp = 100, oppHp = 100, battleOpp = 'buddy';
 
   $('gamebtn').onclick = () => {
+    const setupImg = $('setup-buddy-img'), setupFallback = $('setup-buddy-fallback');
+    if (S.buddy) {
+      setupImg.src = ART + (S.buddy.shiny ? 'shiny/' : '') + S.buddy.id + '.png';
+      setupImg.style.display = 'block';
+      setupFallback.style.display = 'none';
+    } else {
+      setupImg.style.display = 'none';
+      setupFallback.style.display = 'block';
+    }
+    $('battle-notice').style.display = 'none';
     $('game-setup').style.display = 'block';
     $('game-play').style.display = 'none';
     $('game-win').style.display = 'none';
@@ -961,93 +1005,100 @@
 
   $('choose-buddy').onclick = () => {
     if (!S.buddy) {
-      alert('Je hebt nog geen buddy gekozen! Kies eerst een buddy via je Pokédex.');
+      showBattleNotice('Je hebt nog geen buddy gekozen! Kies eerst een buddy via je Pokédex.');
       return;
     }
-    tttOpponent = 'buddy';
-    startTttGame();
+    battleOpp = 'buddy';
+    startBattle();
   };
 
   $('choose-rocket').onclick = () => {
-    tttOpponent = 'rocket';
-    startTttGame();
+    battleOpp = 'rocket';
+    startBattle();
   };
 
-  function startTttGame() {
-    tttBoard = ['', '', '', '', '', '', '', '', ''];
-    tttTurn = 'player';
+  function showBattleNotice(txt) {
+    const notice = $('battle-notice');
+    notice.textContent = txt;
+    notice.style.display = 'block';
+  }
+
+  function startBattle() {
+    playerHp = 100;
+    oppHp = 100;
+    updateHpBars();
     $('game-setup').style.display = 'none';
     $('game-play').style.display = 'block';
-    renderTttBoard();
-  }
 
-  function renderTttBoard() {
-    const cells = document.querySelectorAll('.ttt-cell');
-    cells.forEach((cell, idx) => {
-      cell.textContent = tttBoard[idx] === 'X' ? '🔴' : (tttBoard[idx] === 'O' ? (tttOpponent === 'buddy' ? '⭐' : '🚀') : '');
-      cell.onclick = () => {
-        if (tttTurn === 'player' && tttBoard[idx] === '') {
-          tttBoard[idx] = 'X';
-          renderTttBoard();
-          if (checkTttWin('X')) {
-            endTttGame(true);
-            return;
-          }
-          if (tttBoard.every(c => c !== '')) {
-            alert('Gelijkspel! Probeer het nog eens.');
-            startTttGame();
-            return;
-          }
-          tttTurn = 'ai';
-          $('game-status').textContent = (tttOpponent === 'buddy' ? 'Je Buddy' : 'Team Rocket') + ' denkt na...';
-          setTimeout(aiTttMove, 600);
-        }
-      };
-    });
-  }
-
-  function aiTttMove() {
-    let empty = tttBoard.map((v, i) => v === '' ? i : null).filter(v => v !== null);
-    if (empty.length === 0) return;
-    // Simple AI: pick random or winning/blocking spot
-    let move = empty[Math.floor(Math.random() * empty.length)];
-    // Basic smart check for AI win or block
-    for (let idx of empty) {
-      tttBoard[idx] = 'O';
-      if (checkTttWin('O')) { move = idx; tttBoard[idx] = ''; break; }
-      tttBoard[idx] = '';
-      tttBoard[idx] = 'X';
-      if (checkTttWin('X')) { move = idx; tttBoard[idx] = ''; break; }
-      tttBoard[idx] = '';
+    const pImg = $('battle-player-img'), oImg = $('battle-opp-img');
+    if (S.buddy) {
+      pImg.src = ART + (S.buddy.shiny ? 'shiny/' : '') + S.buddy.id + '.png';
+    } else {
+      pImg.src = ART + '25.png'; // Pikachu fallback
     }
 
-    tttBoard[move] = 'O';
-    renderTttBoard();
-    if (checkTttWin('O')) {
-      alert((tttOpponent === 'buddy' ? 'Je Buddy' : 'Team Rocket') + ' heeft gewonnen! Probeer het opnieuw.');
-      startTttGame();
-      return;
+    if (battleOpp === 'buddy' && S.buddy) {
+      oImg.src = ART + (S.buddy.shiny ? 'shiny/' : '') + S.buddy.id + '.png';
+    } else {
+      oImg.src = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/109.png'; // Koffing / Rocket vibe
     }
-    if (tttBoard.every(c => c !== '')) {
-      alert('Gelijkspel!');
-      startTttGame();
-      return;
-    }
-    tttTurn = 'player';
-    $('game-status').textContent = 'Jij bent aan de beurt! (🔴)';
+
+    $('battle-log').textContent = 'Gevecht gestart! Val snel aan!';
   }
 
-  function checkTttWin(p) {
-    const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-    return wins.some(w => tttBoard[w[0]] === p && tttBoard[w[1]] === p && tttBoard[w[2]] === p);
+  function updateHpBars() {
+    $('player-hp').style.width = Math.max(0, playerHp) + '%';
+    $('opp-hp').style.width = Math.max(0, oppHp) + '%';
   }
 
-  function endTttGame(won) {
-    if (won) {
+  $('atk-fast').onclick = () => {
+    if (playerHp <= 0 || oppHp <= 0) return;
+    sound('throw');
+    const dmgToOpp = Math.floor(Math.random() * 15) + 15;
+    oppHp -= dmgToOpp;
+    updateHpBars();
+    $('battle-log').textContent = `⚡ Je raakt de tegenstander voor ${dmgToOpp} schade!`;
+    checkBattleEnd();
+    if (oppHp > 0) setTimeout(aiAttack, 500);
+  };
+
+  $('atk-charged').onclick = () => {
+    if (playerHp <= 0 || oppHp <= 0) return;
+    sound('pling');
+    const critical = Math.random() < 0.5;
+    const dmgToOpp = critical ? 45 : 20;
+    oppHp -= dmgToOpp;
+    updateHpBars();
+    $('battle-log').textContent = critical ? `💥 KRITISCHE TREFFER! ${dmgToOpp} schade!` : `💥 Krachtige aanval deed ${dmgToOpp} schade!`;
+    checkBattleEnd();
+    if (oppHp > 0) setTimeout(aiAttack, 600);
+  };
+
+  function aiAttack() {
+    if (playerHp <= 0 || oppHp <= 0) return;
+    sound('miss');
+    const dmgToPlayer = Math.floor(Math.random() * 18) + 10;
+    playerHp -= dmgToPlayer;
+    updateHpBars();
+    $('battle-log').textContent = `🔴 Tegenstander slaat terug en doet ${dmgToPlayer} schade!`;
+    checkBattleEnd();
+  }
+
+  function checkBattleEnd() {
+    if (oppHp <= 0) {
       sound('win');
       confetti();
       $('game-play').style.display = 'none';
+      $('battle-win-msg').textContent = 'Geweldig gevochten! Je hebt de tegenstander verslagen.';
       $('game-win').style.display = 'block';
+    } else if (playerHp <= 0) {
+      sound('flee');
+      $('battle-log').textContent = 'Je Pokémon is verslagen... Probeer het opnieuw!';
+      setTimeout(() => {
+        $('game-setup').style.display = 'block';
+        $('game-play').style.display = 'none';
+        showBattleNotice('Helaas verloren! Probeer het nog eens.');
+      }, 1500);
     }
   }
 
@@ -1055,14 +1106,12 @@
     S.balls.mega = (S.balls.mega || 0) + 5;
     save(); updateBallUI();
     $('game-layer').classList.remove('on');
-    alert('5 Super Balls toegevoegd!');
   };
 
   $('rew-ultra').onclick = () => {
     S.balls.ultra = (S.balls.ultra || 0) + 2;
     save(); updateBallUI();
     $('game-layer').classList.remove('on');
-    alert('2 Ultra Balls toegevoegd!');
   };
   // ----------------------------------------
 
