@@ -165,7 +165,12 @@
   @keyframes sway { 0%,100% { transform: rotate(-1.5deg); } 50% { transform: rotate(1.5deg); } }
   #dress { background: #e0f2fe; }
   #dpreview { height: min(40vh, 60vw * 1.5); margin: 0 auto 8px; flex: none; }
-  #dtabs { justify-content: center; }
+  #dtabs { justify-content: center; flex-wrap: wrap; }
+  #dtabs .pill { font-size: 15px; padding: 8px 12px; }
+  .bw { position: relative; display: flex; align-items: flex-end; flex: none; margin-bottom: 2px; }
+  .bw #buddy { margin-bottom: 0; }
+  .bw.hop { animation: hop .5s ease-in-out 3; }
+  #bdeco { position: absolute; left: 50%; top: -2%; transform: translateX(-50%); font-size: min(5vh, 10vw); line-height: 1; pointer-events: none; }
   #dopts { flex: 1; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-content: flex-start; padding: 8px 12px 24px; }
   #dopts .pill.on { background: #fbbf24; }
   #dopts .sw { display: inline-block; width: 22px; height: 22px; border-radius: 50%; border: 3px solid #1e3a8a; vertical-align: middle; margin-right: 6px; }
@@ -199,7 +204,7 @@
     <div id="msg"></div>
     <div class="stage">
       <div id="trainer" class="trainer" data-pose="idle"></div>
-      <img id="buddy" alt="">
+      <span id="buddywrap" class="bw" style="display:none"><img id="buddy" alt=""><span id="bdeco"></span></span>
       <button id="nobuddy">⭐</button>
     </div>
     <div class="side">
@@ -240,8 +245,9 @@
 <div class="layer" id="dress">
   <div class="bar"><h2>Mijn trainer</h2><button class="pill" id="dressclose">✔ Klaar</button></div>
   <div id="dpreview" class="trainer big-t" data-pose="idle"></div>
-  <div class="tabs" id="dtabs"><button class="pill on" data-k="hair">💇 Haar</button><button class="pill" data-k="color">🎨 Kleur</button><button class="pill" data-k="outfit">👕 Outfit</button></div>
+  <div class="tabs" id="dtabs"><button class="pill on" data-k="hair">💇 Haar</button><button class="pill" data-k="color">🎨 Kleur</button><button class="pill" data-k="outfit">👕 Outfit</button><button class="pill" data-k="ocolor">🧵 Kleur kleding</button><button class="pill" data-k="deco">🎀 Versiering buddy</button><button class="pill" data-k="name">✏️ Naam</button></div>
   <div id="dopts"></div>
+  <div style="text-align:center;font-size:11px;color:#6b7280;padding:4px 0 10px">versie 28-10 aankleden</div>
 </div>
 
 <div class="layer" id="parent" style="background:#f3f4f6">
@@ -276,7 +282,8 @@
     streak: 0,
     giftDate: '',
     skips: 0,
-    trainer: { hair: 'kort', color: 'bruin', outfit: 'rood' },
+    trainer: { hair: 'kort', color: 'bruin', outfit: 'rood', ocolor: 'orig', name: '' },
+    deco: 'geen',
     buddy: null // { id, shiny } van een gevangen Pokémon
   };
 
@@ -541,23 +548,50 @@
   const COLORS = [
     { id: 'bruin', n: 'Bruin', c: '#7b4a2a', f: 'none' }, { id: 'zwart', n: 'Zwart', c: '#222', f: 'brightness(.4) saturate(.6)' },
     { id: 'blond', n: 'Blond', c: '#f2c75c', f: 'sepia(.5) saturate(2.2) brightness(1.55)' }, { id: 'rood', n: 'Rood', c: '#d1432b', f: 'hue-rotate(-20deg) saturate(2.2) brightness(1.1)' },
-    { id: 'roze', n: 'Roze', c: '#ec6fb4', f: 'hue-rotate(285deg) saturate(2) brightness(1.3)' }, { id: 'blauw', n: 'Blauw', c: '#3b82f6', f: 'hue-rotate(185deg) saturate(2.2) brightness(1.2)' }
+    { id: 'roze', n: 'Roze', c: '#ec6fb4', f: 'hue-rotate(285deg) saturate(2) brightness(1.3)' }, { id: 'blauw', n: 'Blauw', c: '#3b82f6', f: 'hue-rotate(185deg) saturate(2.2) brightness(1.2)' },
+    { id: 'paars', n: 'Paars', c: '#8b5cf6', f: 'grayscale(1) sepia(1) hue-rotate(242deg) saturate(3) brightness(1.5)' }, { id: 'groen', n: 'Groen', c: '#22c55e', f: 'grayscale(1) sepia(1) hue-rotate(87deg) saturate(3) brightness(1.4)' },
+    { id: 'turkoois', n: 'Turkoois', c: '#14b8a6', f: 'grayscale(1) sepia(1) hue-rotate(137deg) saturate(3) brightness(1.4)' }, { id: 'oranje', n: 'Oranje', c: '#f97316', f: 'grayscale(1) sepia(1) hue-rotate(350deg) saturate(3.5) brightness(1.5)' },
+    { id: 'wit', n: 'Wit', c: '#f3f4f6', f: 'grayscale(1) brightness(2.2)' }, { id: 'grijs', n: 'Grijs', c: '#9ca3af', f: 'grayscale(1) brightness(1.25)' }
   ];
   const OUTFITS = [{ id: 'rood', n: '🔴 Avonturier' }, { id: 'blauw', n: '🔵 Sportief' }, { id: 'groen', n: '🟢 Ontdekker' }, { id: 'geel', n: '🟡 Regenjas' }];
+  // Kleur van de kleding: eerst grijs maken en dan inkleuren, zodat elke outfit dezelfde kleur krijgt (wit en zwart blijven licht en donker).
+  const tint = (h, b = 1.15) => `grayscale(1) sepia(1) hue-rotate(${h}deg) saturate(3) brightness(${b})`;
+  const OCOLORS = [
+    { id: 'orig', n: 'Zoals het is', c: 'conic-gradient(#ef4444, #eab308, #22c55e, #3b82f6, #ec4899, #ef4444)', f: 'none' },
+    { id: 'roze', n: 'Roze', c: '#ec4899', f: tint(292) }, { id: 'paars', n: 'Paars', c: '#8b5cf6', f: tint(242) }, { id: 'blauw', n: 'Blauw', c: '#3b82f6', f: tint(177) },
+    { id: 'turkoois', n: 'Turkoois', c: '#14b8a6', f: tint(137) }, { id: 'groen', n: 'Groen', c: '#22c55e', f: tint(87) }, { id: 'geel', n: 'Geel', c: '#eab308', f: tint(17) },
+    { id: 'oranje', n: 'Oranje', c: '#f97316', f: tint(350) }, { id: 'rood', n: 'Rood', c: '#ef4444', f: tint(322) },
+    { id: 'zwart', n: 'Zwart', c: '#1f2937', f: 'grayscale(1) brightness(.4)' }, { id: 'wit', n: 'Wit', c: '#f3f4f6', f: 'grayscale(1) brightness(1.7)' }
+  ];
+  const DECOS = [{ id: 'geen', n: 'Geen' }, { id: 'strik', n: 'Strik', e: '🎀' }, { id: 'kroon', n: 'Kroon', e: '👑' }, { id: 'hoed', n: 'Hoedje', e: '🎩' },
+    { id: 'bloem', n: 'Bloem', e: '🌸' }, { id: 'ster', n: 'Ster', e: '⭐' }, { id: 'pet', n: 'Pet', e: '🧢' }, { id: 'hart', n: 'Hartje', e: '❤️' }];
+  // Meer haarstijlen of outfits? Zet de PNG's in trainer/ en vermeld ze in trainer/manifest.json: { "hairs": [{ "id": "..", "n": ".." }], "outfits": [{ "id": "..", "n": ".." }] }
+  fetch('trainer/manifest.json').then(r => (r.ok ? r.json() : null)).then(m => {
+    if (!m) return;
+    [[HAIRS, m.hairs], [OUTFITS, m.outfits]].forEach(([arr, add]) => (add || []).forEach(o => { if (o && o.id && !arr.some(x => x.id === o.id)) arr.push({ id: String(o.id), n: String(o.n || o.id) }); }));
+    if ($('dress').classList.contains('on')) renderDress();
+  }).catch(() => {});
+  function renderDeco() { $('bdeco').textContent = (DECOS.find(d => d.id === S.deco) || DECOS[0]).e || ''; }
+  function updateNames() { // naam van de trainer in de titels
+    const n = (S.trainer.name || '').trim();
+    const h = document.querySelector('#dex .bar h2'); if (h && h.firstChild) h.firstChild.textContent = (n ? 'Pokédex van ' + n : 'Mijn Pokédex') + ' ';
+    const d = document.querySelector('#dress .bar h2'); if (d) d.textContent = n || 'Mijn trainer';
+  }
   function trainerHTML(pose, t = S.trainer) {
     const f = (COLORS.find(c => c.id === t.color) || COLORS[0]).f;
     const L = (name, style = '', extra = '') => `<img src="trainer/${name}.png" alt="" style="${style}" onerror="this.style.display='none'" ${extra}>`;
     return '<span class="tfb">🧒</span>'
       + L(`hair-${t.hair}-back`, `filter:${f}`)
       + L(`base-${pose}`, '', `onload="this.parentNode.querySelector('.tfb').style.display='none'"`)
-      + L(`outfit-${t.outfit}-${pose}`)
+      + L(`outfit-${t.outfit}-${pose}`, `filter:${(OCOLORS.find(c => c.id === t.ocolor) || OCOLORS[0]).f}`)
       + L(`hair-${t.hair}-front`, `filter:${f}`);
   }
   function renderBuddy() {
-    const b = $('buddy'), nb = $('nobuddy');
-    if (!S.buddy) { b.style.display = 'none'; nb.style.display = ''; return; }
-    nb.style.display = 'none'; b.style.display = '';
-    b.onerror = () => { b.style.display = 'none'; nb.style.display = ''; };
+    const b = $('buddy'), nb = $('nobuddy'), w = $('buddywrap');
+    renderDeco(); updateNames();
+    if (!S.buddy) { w.style.display = 'none'; nb.style.display = ''; return; }
+    nb.style.display = 'none'; w.style.display = '';
+    b.onerror = () => { w.style.display = 'none'; nb.style.display = ''; };
     b.src = ART + (S.buddy.shiny ? 'shiny/' : '') + S.buddy.id + '.png';
   }
   const BALLNAME = { poke: 'Poké Ball', great: 'Great Ball', mega: 'Super Ball', ultra: 'Ultra Ball', master: 'Master Ball' };
@@ -583,7 +617,7 @@
   let poseTimer = null;
   function setPose(p, back) { // back = na zoveel ms terug naar idle
     clearTimeout(poseTimer);
-    $('buddy').classList.toggle('hop', p === 'happy');
+    $('buddywrap').classList.toggle('hop', p === 'happy');
     const el = $('trainer'); el.dataset.pose = p; el.innerHTML = trainerHTML(p);
     if (back) poseTimer = setTimeout(() => setPose('idle'), back);
   }
@@ -591,10 +625,17 @@
   function renderDress() {
     $('dpreview').innerHTML = trainerHTML('idle');
     document.querySelectorAll('#dtabs .pill').forEach(b => b.classList.toggle('on', b.dataset.k === dtab));
-    const list = dtab === 'hair' ? HAIRS : dtab === 'color' ? COLORS : OUTFITS;
-    $('dopts').innerHTML = list.map(o => `<button class="pill ${S.trainer[dtab] === o.id ? 'on' : ''}" data-id="${o.id}">${o.c ? `<span class="sw" style="background:${o.c}"></span>` : ''}${o.n}</button>`).join('');
+    if (dtab === 'name') {
+      $('dopts').innerHTML = '<div style="width:100%;text-align:center"><input id="tname-in" maxlength="14" placeholder="Hoe heet je?" style="font-size:28px;padding:10px 14px;border-radius:14px;border:3px solid #1e3a8a;width:min(90%,320px);text-align:center"></div>';
+      const inp = $('tname-in'); inp.value = S.trainer.name || '';
+      inp.oninput = () => { S.trainer.name = inp.value.slice(0, 14); save(); updateNames(); };
+      return;
+    }
+    const list = { hair: HAIRS, color: COLORS, outfit: OUTFITS, ocolor: OCOLORS, deco: DECOS }[dtab] || HAIRS;
+    const curv = dtab === 'deco' ? S.deco : S.trainer[dtab];
+    $('dopts').innerHTML = list.map(o => `<button class="pill ${curv === o.id ? 'on' : ''}" data-id="${o.id}">${o.c ? `<span class="sw" style="background:${o.c}"></span>` : ''}${o.e ? o.e + ' ' : ''}${o.n}</button>`).join('');
   }
-  $('dopts').onclick = e => { const b = e.target.closest('[data-id]'); if (!b) return; S.trainer[dtab] = b.dataset.id; save(); renderDress(); setPose($('trainer').dataset.pose); };
+  $('dopts').onclick = e => { const b = e.target.closest('[data-id]'); if (!b) return; if (dtab === 'deco') S.deco = b.dataset.id; else S.trainer[dtab] = b.dataset.id; save(); renderDress(); renderDeco(); setPose($('trainer').dataset.pose); };
   $('dtabs').onclick = e => { const b = e.target.closest('[data-k]'); if (!b) return; dtab = b.dataset.k; renderDress(); };
   $('trainerbtn').onclick = () => { renderDress(); $('dress').classList.add('on'); };
   $('dressclose').onclick = () => { $('dress').classList.remove('on'); setPose('idle'); };
