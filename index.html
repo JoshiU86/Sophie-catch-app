@@ -83,6 +83,19 @@
   #thrown { --s: 70px; position: absolute; left: 50%; top: 50%; margin: -35px 0 0 -35px; display: none; z-index: 5; }
   .fly { display: block !important; animation: fly .8s ease-out forwards; }
   @keyframes fly { 0% { transform: translate(-26vw, 36vh) scale(.5) rotate(0); } 60% { transform: translate(-4vw, -6vh) scale(1.1) rotate(540deg); } 100% { transform: translate(0, 0) scale(.9) rotate(720deg); } }
+  
+  /* Super Gaven Master Ball Fly Animatie */
+  .fly-master { 
+    display: block !important; 
+    animation: fly-master .9s cubic-bezier(0.25, 1, 0.5, 1) forwards !important; 
+    filter: drop-shadow(0 0 16px #c084fc) drop-shadow(0 0 30px #e879f9) !important; 
+  }
+  @keyframes fly-master { 
+    0% { transform: translate(-26vw, 36vh) scale(.5) rotate(0); } 
+    50% { transform: translate(-4vw, -12vh) scale(1.35) rotate(720deg); } 
+    100% { transform: translate(0, 0) scale(1.05) rotate(1080deg); } 
+  }
+
   .wig { animation: wig .6s ease-in-out; }
   @keyframes wig { 0%,100% { transform: rotate(0); } 20% { transform: rotate(-30deg); } 45% { transform: rotate(0); } 65% { transform: rotate(30deg); } 85% { transform: rotate(0); } }
   
@@ -126,15 +139,14 @@
   .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 16px; background: #fff; margin: 6px 12px; border-radius: 14px; font-size: 18px; }
   .row button { font-size: 16px; padding: 8px 14px; }
 
-  /* Trainer: vergroot naar min(31vh, ...) en strakker bij de buddy geplaatst */
+  /* Trainer */
   .trainer { position: relative; aspect-ratio: 2 / 3; pointer-events: none; }
   .trainer img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
   .trainer .tfb { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 64px; }
   .stage { display: flex; align-items: flex-end; gap: -2px; width: 100%; padding: 4px 0 0 4px; flex: none; }
-  #app .trainer { position: relative; flex: none; height: min(31vh, 46vw * 1.5); filter: drop-shadow(0 6px 4px rgba(0,0,0,.25)); transform-origin: 50% 100%; }
+  #app .trainer { position: relative; flex: none; height: min(28vh, 42vw * 1.5); filter: drop-shadow(0 6px 4px rgba(0,0,0,.25)); transform-origin: 50% 100%; }
   
-  /* Buddy iets groter en dichterbij het poppetje */
-  #buddy { height: min(12.5vh, 24vw); width: auto; flex: none; margin-bottom: 2px; margin-left: -6px; object-fit: contain; filter: drop-shadow(0 4px 3px rgba(0,0,0,.25)); animation: bob 1.8s ease-in-out infinite; }
+  #buddy { height: min(11.5vh, 22vw); width: auto; flex: none; margin-bottom: 2px; margin-left: -6px; object-fit: contain; filter: drop-shadow(0 4px 3px rgba(0,0,0,.25)); animation: bob 1.8s ease-in-out infinite; }
   #buddy.hop { animation: hop .5s ease-in-out 3; }
   #namerow { display: flex; align-items: center; justify-content: center; gap: 10px; max-width: calc(100% - 130px); }
   #namerow #name { max-width: none; }
@@ -148,7 +160,6 @@
   #buddy { cursor: pointer; }
   #nobuddy { flex: none; width: min(10vh, 20vw); height: min(10vh, 20vw); margin-bottom: 8px; margin-left: -4px; border-radius: 50%; border: 3px dashed rgba(255,255,255,.9); background: rgba(255,255,255,.35); font-size: 22px; cursor: pointer; animation: bob 1.8s ease-in-out infinite; }
 
-  /* Shiny: gouden gloed, sparkles, gouden naam en label */
   #mon.shiny { filter: drop-shadow(0 0 10px #fde047) drop-shadow(0 0 26px #facc15) drop-shadow(0 12px 6px rgba(0,0,0,.25)); }
   #name.shiny { background: linear-gradient(90deg, #f59e0b, #fef08a, #f59e0b, #fef08a); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; -webkit-text-stroke: 1.5px #92400e; animation: shimmer 2s linear infinite; }
   @keyframes shimmer { to { background-position: 200% 0; } }
@@ -193,13 +204,14 @@
     100% { filter: grayscale(1) sepia(1) hue-rotate(360deg) saturate(3) brightness(1.2); }
   }
   .rainbow-outfit { animation: rainbow-anim 4s linear infinite; }
+  .rainbow-hair { animation: rainbow-anim 4s linear infinite; }
 
   .monwrap { padding-right: 76px; }
   #mon { width: min(calc(100vw - 100px), 40vh); height: min(calc(100vw - 100px), 40vh); }
   #thrown { left: calc(50% - 38px); }
   #namerow { max-width: calc(100% - 84px); margin: 4px 76px 0 0; }
   #name { font-size: clamp(22px, 8vw, 32px); min-height: 38px; line-height: 38px; }
-  #msg { max-width: calc(100% - 84px); margin: 6px 76px 4px 0; font-size: clamp(16px, 5vw, 20px); }
+  #msg { max-width: clamp(16px, 5vw, 20px); }
   .spk { margin-left: -38px; }
   #app .trainer { height: min(28vh, 42vw * 1.5); }
   #buddy { height: min(11.5vh, 22vw); }
@@ -263,6 +275,13 @@
   <button class="pill" id="r-ultra" style="margin:6px"><span class="ball ball-ultra" style="--s:34px;vertical-align:middle"></span> 5 Ultra Balls</button>
 </div></div>
 
+<!-- Shiny Reward Scherm -->
+<div class="layer big" id="shiny-reward"><div class="box">
+  <h3>✨ 10 Shiny Pokémon! ✨</h3><p style="font-size:18px;margin:6px 0 12px">Kies jouw fantastische beloning:</p>
+  <button class="pill" id="sr-balls" style="margin:6px;width:100%">🎁 10 Super Balls</button><br>
+  <button class="pill" id="sr-spawn" style="margin:6px;width:100%">✨ Direct een nieuwe Shiny!</button>
+</div></div>
+
 <div class="layer" id="dress">
   <div class="bar"><h2>Mijn trainer</h2><button class="pill" id="dressclose">✔ Klaar</button></div>
   <div id="dpreview" class="trainer big-t" data-pose="idle"></div>
@@ -301,28 +320,21 @@
     streak: 0,
     giftDate: '',
     skips: 0,
+    totalCaughtCount: 0,
+    claimedShinyMilestones: 0,
     trainer: { hair: 'kort', color: 'bruin', outfit: 'rood', ocolor: 'orig', name: '' },
     toy: 'geen',
     buddy: null
   };
 
   const refill = b => { const o = { ...b, poke: Infinity }; ['great', 'ultra', 'master'].forEach(k => o[k] = Math.max(+b[k] || 0, LIMITS[k])); o.mega = +b.mega || 0; return o; };
-  const fresh = () => ({ ...def, balls: { ...def.balls }, trainer: { ...def.trainer }, toy: 'geen', buddy: null, caught: {}, shinies: {}, v: 2 });
+  const fresh = () => ({ ...def, balls: { ...def.balls }, trainer: { ...def.trainer }, toy: 'geen', buddy: null, caught: {}, shinies: {}, v: 3 });
   
   function migrate(d) {
     d.shinies = d.shinies || {};
     d.trainer = { ...def.trainer, ...(d.trainer || {}) };
-    if (!d.v || d.v < 2) {
-      for (const [id, c] of Object.entries(d.caught || {})) {
-        if (!c.shiny) continue;
-        d.shinies[id] = d.shinies[id] || { n: 1, name: c.name, at: c.shinyAt || 0 };
-        c.n = (c.n || 1) - 1; delete c.shiny; delete c.shinyAt;
-        if (c.n <= 0) delete d.caught[id];
-      }
-      d.v = 2;
-    }
-    const b = d.buddy;
-    d.buddy = b && (b.shiny ? d.shinies : d.caught)[b.id] ? { id: +b.id, shiny: !!b.shiny } : null;
+    d.totalCaughtCount = d.totalCaughtCount || Object.values(d.caught || {}).reduce((acc, x) => acc + (x.n || 0), 0) + Object.values(d.shinies || {}).reduce((acc, x) => acc + (x.n || 0), 0);
+    d.claimedShinyMilestones = d.claimedShinyMilestones || 0;
     return d;
   }
 
@@ -344,6 +356,7 @@
   let cur = null, busy = false, misses = 0, tab = 'all', selectedBall = 'poke';
   const cap = n => n.replace(/-/g, ' ').replace(/\b\w/g, m => m.toUpperCase());
   const total = () => Object.keys(S.caught).filter(id => +id <= S.size).length;
+  const totalShinyCount = () => Object.values(S.shinies).reduce((acc, x) => acc + (x.n || 0), 0);
 
   let ac = null;
   function initAudio() {
@@ -367,6 +380,7 @@
     try { 
       initAudio();
       if (k === 'pling') { tone('sine', 1319, 1319, 0, .35, .3); tone('sine', 1976, 1976, .1, .6, .25); }
+      else if (k === 'master') { [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => tone('triangle', f, f, i * .08, .3, .25)); }
       else if (k === 'shiny') [1568, 1976, 2349, 3136, 2349, 3136].forEach((f, i) => tone('triangle', f, f, i * .09, .25, .2));
       else if (k === 'shinywin') { tone('sine', 1319, 1319, 0, .35, .3); tone('sine', 1976, 1976, .1, .6, .25); [2349, 2637, 3136, 3951].forEach((f, i) => tone('triangle', f, f, .35 + i * .1, .3, .18)); }
       else if (k === 'throw') tone('sine', 400, 90, 0, .3, .25); 
@@ -511,7 +525,7 @@
 
   const STREAK_GOAL = 5;
   const REWARD = { great: 10, ultra: 5 };
-  const CATCH = { min: 0.18, spread: 0.50, missBonus: 0.06, cap: 0.95, master: 0.98, mult: { poke: 1, great: 1.3, mega: 1.6, ultra: 2.0 } };
+  const CATCH = { min: 0.18, spread: 0.50, missBonus: 0.06, cap: 0.95, master: 1.0, mult: { poke: 1, great: 1.3, mega: 1.6, ultra: 2.0 } };
   function updateStreak() {
     $('streak').textContent = `🔥 ${S.streak || 0}/${STREAK_GOAL}`;
     $('streak').classList.toggle('dim', !STREAK_BALLS.includes(selectedBall));
@@ -523,6 +537,64 @@
       const pick = k => { S.balls[k] = (S.balls[k] || 0) + REWARD[k]; save(); updateBallUI(); $('reward').classList.remove('on'); res(); };
       $('r-great').onclick = () => pick('great'); $('r-ultra').onclick = () => pick('ultra');
     });
+  }
+
+  function checkShinyReward() {
+    const earnedMilestones = Math.floor(totalShinyCount() / 10);
+    if (earnedMilestones > (S.claimedShinyMilestones || 0)) {
+      return new Promise(res => {
+        $('shiny-reward').classList.add('on');
+        say('Gefeliciteerd! Tien shiny Pokémon gevangen! Kies je beloning!');
+        
+        $('sr-balls').onclick = () => {
+          S.balls.mega = (S.balls.mega || 0) + 10;
+          S.claimedShinyMilestones = earnedMilestones;
+          save(); updateBallUI();
+          $('shiny-reward').classList.remove('on');
+          confetti(); sound('win');
+          res();
+        };
+
+        $('sr-spawn').onclick = () => {
+          S.claimedShinyMilestones = earnedMilestones;
+          save();
+          $('shiny-reward').classList.remove('on');
+          confetti(); sound('shinywin');
+          spawnShinyForced().then(res);
+        };
+      });
+    }
+    return Promise.resolve();
+  }
+
+  async function spawnShinyForced() {
+    busy = true; $('throw').disabled = true;
+    const mon = $('mon');
+    mon.style.opacity = 0;
+    $('name').textContent = ''; $('msg').textContent = '✨ Een speciale Shiny verschijnt! ✨';
+    const id = Math.ceil(Math.random() * S.size);
+    try {
+      const p = await fetch(API + 'pokemon/' + id).then(r => r.json());
+      cur = {
+        id, shiny: true, name: cap(p.name), legendary: false, rate: 120, rare: false,
+        type: p.types?.[0]?.type?.name || 'normal',
+        img: ART + 'shiny/' + id + '.png',
+        alt: p.sprites.front_shiny || p.sprites.front_default
+      };
+    } catch {
+      cur = { id: 25, shiny: true, name: 'Pikachu', legendary: false, rate: 120, rare: false, type: 'electric', img: ART + 'shiny/25.png' };
+    }
+    misses = 0;
+    setBackground(cur.type);
+    mon.src = cur.img;
+    mon.onload = () => { mon.style.opacity = 1; };
+    $('name').textContent = '✨ ' + cur.name;
+    $('msg').textContent = '✨ SHINY! Wow! ✨';
+    mon.classList.add('shiny'); $('name').classList.add('shiny'); $('msg').classList.add('shiny');
+    document.querySelector('.monwrap').classList.remove('quiet'); sparkles(true); markDex();
+    sound('shiny'); sayMix(['Wauw, een shiny!', 'nl-NL']);
+    $('throw').disabled = false;
+    busy = false;
   }
 
   const TYPES = {
@@ -551,14 +623,18 @@
 
   const POSES = ['idle', 'throw', 'happy', 'sad'];
   const HAIRS = [{ id: 'kort', n: 'Kort' }, { id: 'staart', n: 'Staart' }, { id: 'los', n: 'Los' }, { id: 'staartjes', n: 'Staartjes' }];
+  
   const COLORS = [
-    { id: 'bruin', n: 'Bruin', c: '#7b4a2a', f: 'none' }, { id: 'zwart', n: 'Zwart', c: '#222', f: 'brightness(.4) saturate(.6)' },
+    { id: 'bruin', n: 'Bruin', c: '#7b4a2a', f: 'none' }, 
+    { id: 'regenboog', n: '🌈 Regenboog', c: 'linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet)', f: 'rainbow', cls: 'rainbow-hair' },
+    { id: 'zwart', n: 'Zwart', c: '#222', f: 'brightness(.4) saturate(.6)' },
     { id: 'blond', n: 'Blond', c: '#f2c75c', f: 'sepia(.5) saturate(2.2) brightness(1.55)' }, { id: 'rood', n: 'Rood', c: '#d1432b', f: 'hue-rotate(-20deg) saturate(2.2) brightness(1.1)' },
     { id: 'roze', n: 'Roze', c: '#ec6fb4', f: 'hue-rotate(285deg) saturate(2) brightness(1.3)' }, { id: 'blauw', n: 'Blauw', c: '#3b82f6', f: 'hue-rotate(185deg) saturate(2.2) brightness(1.2)' },
     { id: 'paars', n: 'Paars', c: '#8b5cf6', f: 'grayscale(1) sepia(1) hue-rotate(242deg) saturate(3) brightness(1.5)' }, { id: 'groen', n: 'Groen', c: '#22c55e', f: 'grayscale(1) sepia(1) hue-rotate(87deg) saturate(3) brightness(1.4)' },
     { id: 'turkoois', n: 'Turkoois', c: '#14b8a6', f: 'grayscale(1) sepia(1) hue-rotate(137deg) saturate(3) brightness(1.4)' }, { id: 'oranje', n: 'Oranje', c: '#f97316', f: 'grayscale(1) sepia(1) hue-rotate(350deg) saturate(3.5) brightness(1.5)' },
     { id: 'wit', n: 'Wit', c: '#f3f4f6', f: 'grayscale(1) brightness(2.2)' }, { id: 'grijs', n: 'Grijs', c: '#9ca3af', f: 'grayscale(1) brightness(1.25)' }
   ];
+
   const OUTFITS = [{ id: 'rood', n: '🔴 Avonturier' }, { id: 'blauw', n: '🔵 Sportief' }, { id: 'groen', n: '🟢 Ontdekker' }, { id: 'geel', n: '🟡 Regenjas' }];
   const tint = (h, b = 1.15) => `grayscale(1) sepia(1) hue-rotate(${h}deg) saturate(3) brightness(${b})`;
   
@@ -599,17 +675,20 @@
   }
 
   function trainerHTML(pose, t = S.trainer) {
-    const f = (COLORS.find(c => c.id === t.color) || COLORS[0]).f;
+    const col = COLORS.find(c => c.id === t.color) || COLORS[0];
+    const hairStyle = col.f === 'rainbow' ? '' : `filter:${col.f}`;
+    const hairClass = col.cls ? `class="${col.cls}"` : '';
+
     const oc = OCOLORS.find(c => c.id === t.ocolor) || OCOLORS[0];
     const outfitStyle = oc.f === 'rainbow' ? '' : `filter:${oc.f}`;
     const outfitClass = oc.cls ? `class="${oc.cls}"` : '';
 
     const L = (name, style = '', extra = '') => `<img src="trainer/${name}.png" alt="" style="${style}" onerror="this.style.display='none'" ${extra}>`;
     return '<span class="tfb">🧒</span>'
-      + L(`hair-${t.hair}-back`, `filter:${f}`)
+      + L(`hair-${t.hair}-back`, hairStyle, hairClass)
       + L(`base-${pose}`, '', `onload="this.parentNode.querySelector('.tfb').style.display='none'"`)
       + L(`outfit-${t.outfit}-${pose}`, outfitStyle, outfitClass)
-      + L(`hair-${t.hair}-front`, `filter:${f}`);
+      + L(`hair-${t.hair}-front`, hairStyle, hairClass);
   }
 
   function renderBuddy() {
@@ -663,7 +742,7 @@
       return;
     }
     const list = { hair: HAIRS, color: COLORS, outfit: OUTFITS, ocolor: OCOLORS, toy: TOYS }[dtab] || HAIRS;
-    const curv = dtab === 'toy' ? (S.toy || 'geen') : S.trainer[dtab];
+    const curv = dtab === 'toy' ? (S.toy || 'geen') : (dtab === 'color' ? S.trainer.color : S.trainer[dtab]);
     $('dopts').innerHTML = list.map(o => `<button class="pill ${curv === o.id ? 'on' : ''}" data-id="${o.id}">${o.c ? `<span class="sw" style="background:${o.c}"></span>` : ''}${o.e ? o.e + ' ' : ''}${o.n}</button>`).join('');
   }
 
@@ -730,14 +809,12 @@
   }
 
   function getCatchParams(ball) {
+    if (ball === 'master') return { success: true, flees: false };
     const base = CATCH.min + CATCH.spread * (cur.rate / 255);
-    const p = ball === 'master' ? CATCH.master
-      : Math.min(CATCH.cap, (base + Math.min(misses, 5) * CATCH.missBonus) * (CATCH.mult[ball] || 1));
-
+    const p = Math.min(CATCH.cap, (base + Math.min(misses, 5) * CATCH.missBonus) * (CATCH.mult[ball] || 1));
     const success = Math.random() < p;
     const fleeRate = 0.08 + 0.22 * (1 - cur.rate / 255);
     const flees = !success && (Math.random() < fleeRate);
-
     return { success, flees };
   }
 
@@ -761,34 +838,72 @@
     $('next').disabled = true;
     
     const ball = $('thrown'), mon = $('mon');
+    ball.className = `ball ball-${usedBall}`; // Zorg dat de juiste bal-klasse wordt toegepast!
+    
     const { success, flees } = getCatchParams(usedBall);
 
-    sound('throw');
-    setPose('throw');
-    document.querySelector('.monwrap').classList.add('quiet');
-    $('msg').textContent = '';
-    ball.classList.add('fly'); 
-    await sleep(800);
-    
-    mon.style.opacity = 0; 
-    ball.classList.remove('fly'); 
-    ball.style.display = 'block';
+    if (usedBall === 'master') {
+      sound('master');
+      setPose('throw');
+      document.querySelector('.monwrap').classList.add('quiet');
+      $('msg').textContent = '👑 UNSTOPPABLE MASTER BALL! 👑';
+      say('Magische Master Ball!');
+      
+      ball.classList.add('fly-master');
+      await sleep(900);
+      
+      mon.style.opacity = 0;
+      ball.classList.remove('fly-master');
+      ball.style.display = 'block';
+      confetti();
 
-    const wiggles = success ? 3 : Math.floor(Math.random() * 2) + 1;
-    for (let i = 0; i < wiggles; i++) { 
-      await sleep(i ? 1000 : 400); 
-      ball.classList.remove('wig'); 
-      void ball.offsetWidth; 
-      ball.classList.add('wig'); 
-      sound('wig'); 
-      $('msg').textContent = '• '.repeat(i + 1); 
+      for (let i = 0; i < 3; i++) {
+        await sleep(400);
+        ball.classList.remove('wig');
+        void ball.offsetWidth;
+        ball.classList.add('wig');
+        sound('wig');
+        $('msg').textContent = '🌟 '.repeat(i + 1);
+      }
+      await sleep(600);
+    } else {
+      sound('throw');
+      setPose('throw');
+      document.querySelector('.monwrap').classList.add('quiet');
+      $('msg').textContent = '';
+      ball.classList.add('fly'); 
+      await sleep(800);
+      
+      mon.style.opacity = 0; 
+      ball.classList.remove('fly'); 
+      ball.style.display = 'block';
+
+      const wiggles = success ? 3 : Math.floor(Math.random() * 2) + 1;
+      for (let i = 0; i < wiggles; i++) { 
+        await sleep(i ? 1000 : 400); 
+        ball.classList.remove('wig'); 
+        void ball.offsetWidth; 
+        ball.classList.add('wig'); 
+        sound('wig'); 
+        $('msg').textContent = '• '.repeat(i + 1); 
+      }
+      await sleep(1100);
     }
-    await sleep(1100);
 
     if (success) {
       const bucket = cur.shiny ? S.shinies : S.caught;
       const c = bucket[cur.id] || (bucket[cur.id] = { n: 0, name: cur.name, at: Date.now() }), isNew = c.n === 0;
       c.n++; c.b = c.b || {}; c.b[usedBall] = (c.b[usedBall] || 0) + 1; if (isNew) c.ball = usedBall;
+      
+      // Totaal aantal vangsten ophogen voor Master Ball beloning bij 100
+      S.totalCaughtCount = (S.totalCaughtCount || 0) + 1;
+      let earnedMasterBalls = Math.floor(S.totalCaughtCount / 100);
+      let prevMasterBalls = Math.floor((S.totalCaughtCount - 1) / 100);
+      let gotMasterBall = earnedMasterBalls > prevMasterBalls;
+      if (gotMasterBall) {
+        S.balls.master = (S.balls.master || 0) + 1;
+      }
+
       save();
       $('count').textContent = total();
       S.skips = 0; save(); updateSkipUI();
@@ -798,15 +913,23 @@
         if (S.streak >= STREAK_GOAL) { S.streak = 0; reward = true; }
         save(); updateStreak();
       }
-      sound(cur.shiny ? 'shinywin' : 'pling');
+      sound(usedBall === 'master' ? 'shinywin' : (cur.shiny ? 'shinywin' : 'pling'));
       setPose('happy');
       sayMix(['Gevangen!', 'nl-NL'], [cur.name, 'en-US']);
-      $('msg').textContent = isNew ? (cur.shiny ? '🎉 Gevangen! Nieuw in je shiny Pokédex!' : '🎉 Gevangen! Nieuw in je Pokédex!') : '🎉 Gevangen!';
-      if (misses === 0 && !STREAK_BALLS.includes(usedBall)) $('msg').textContent += ' (telt niet mee voor 🔥)';
+      
+      let msgText = isNew ? (cur.shiny ? '🎉 Gevangen! Nieuw in je shiny Pokédex!' : '🎉 Gevangen! Nieuw in je Pokédex!') : '🎉 Gevangen!';
+      if (gotMasterBall) {
+        msgText += ' 🏆 100 vangsten! Je krijgt een Master Ball!';
+      }
+      $('msg').textContent = msgText;
+
       await sleep(3200); 
       ball.style.display = 'none'; 
       $('next').disabled = false; 
+
       if (reward) await chooseReward();
+      if (cur.shiny) await checkShinyReward();
+
       await spawn();
     } else if (flees) {
       sound('miss');
