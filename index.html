@@ -126,13 +126,15 @@
   .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 16px; background: #fff; margin: 6px 12px; border-radius: 14px; font-size: 18px; }
   .row button { font-size: 16px; padding: 8px 14px; }
 
-  /* Trainer: alle laagjes (PNG) liggen exact op elkaar, zelfde canvas (2:3) */
+  /* Trainer: vergroot naar min(31vh, ...) en strakker bij de buddy geplaatst */
   .trainer { position: relative; aspect-ratio: 2 / 3; pointer-events: none; }
   .trainer img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
   .trainer .tfb { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 64px; }
-  .stage { display: flex; align-items: flex-end; gap: 2px; width: 100%; padding: 4px 0 0 8px; flex: none; }
-  #app .trainer { position: relative; flex: none; height: min(25vh, 38vw * 1.5); filter: drop-shadow(0 6px 4px rgba(0,0,0,.25)); transform-origin: 50% 100%; }
-  #buddy { height: min(11vh, 22vw); width: auto; flex: none; margin-bottom: 2px; object-fit: contain; filter: drop-shadow(0 4px 3px rgba(0,0,0,.25)); animation: bob 1.8s ease-in-out infinite; }
+  .stage { display: flex; align-items: flex-end; gap: -2px; width: 100%; padding: 4px 0 0 4px; flex: none; }
+  #app .trainer { position: relative; flex: none; height: min(31vh, 46vw * 1.5); filter: drop-shadow(0 6px 4px rgba(0,0,0,.25)); transform-origin: 50% 100%; }
+  
+  /* Buddy iets groter en dichterbij het poppetje */
+  #buddy { height: min(12.5vh, 24vw); width: auto; flex: none; margin-bottom: 2px; margin-left: -6px; object-fit: contain; filter: drop-shadow(0 4px 3px rgba(0,0,0,.25)); animation: bob 1.8s ease-in-out infinite; }
   #buddy.hop { animation: hop .5s ease-in-out 3; }
   #namerow { display: flex; align-items: center; justify-content: center; gap: 10px; max-width: calc(100% - 130px); }
   #namerow #name { max-width: none; }
@@ -144,7 +146,7 @@
   .card .cb { --s: 22px; position: absolute; top: 6px; left: 6px; border-width: 3px; }
   .card .cb::after { border-width: 2px; }
   #buddy { cursor: pointer; }
-  #nobuddy { flex: none; width: min(9vh, 18vw); height: min(9vh, 18vw); margin-bottom: 8px; border-radius: 50%; border: 3px dashed rgba(255,255,255,.9); background: rgba(255,255,255,.35); font-size: 22px; cursor: pointer; animation: bob 1.8s ease-in-out infinite; }
+  #nobuddy { flex: none; width: min(10vh, 20vw); height: min(10vh, 20vw); margin-bottom: 8px; margin-left: -4px; border-radius: 50%; border: 3px dashed rgba(255,255,255,.9); background: rgba(255,255,255,.35); font-size: 22px; cursor: pointer; animation: bob 1.8s ease-in-out infinite; }
 
   /* Shiny: gouden gloed, sparkles, gouden naam en label */
   #mon.shiny { filter: drop-shadow(0 0 10px #fde047) drop-shadow(0 0 26px #facc15) drop-shadow(0 12px 6px rgba(0,0,0,.25)); }
@@ -167,15 +169,31 @@
   #dpreview { height: min(40vh, 60vw * 1.5); margin: 0 auto 8px; flex: none; }
   #dtabs { justify-content: center; flex-wrap: wrap; }
   #dtabs .pill { font-size: 15px; padding: 8px 12px; }
-  .bw { position: relative; display: flex; align-items: flex-end; flex: none; margin-bottom: 2px; }
+  .bw { position: relative; display: flex; align-items: flex-end; flex: none; margin-bottom: 2px; gap: 2px; }
   .bw #buddy { margin-bottom: 0; }
   .bw.hop { animation: hop .5s ease-in-out 3; }
-  #bdeco { position: absolute; left: 50%; top: -2%; transform: translateX(-50%); font-size: min(5vh, 10vw); line-height: 1; pointer-events: none; }
+  
+  #btoy { 
+    font-size: min(4.5vh, 9vw); 
+    line-height: 1; 
+    margin-bottom: 4px;
+    margin-left: -4px;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,.2));
+    animation: toy-float 2s ease-in-out infinite;
+  }
+  @keyframes toy-float { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-3px) rotate(5deg); } }
+
   #dopts { flex: 1; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-content: flex-start; padding: 8px 12px 24px; }
   #dopts .pill.on { background: #fbbf24; }
   #dopts .sw { display: inline-block; width: 22px; height: 22px; border-radius: 50%; border: 3px solid #1e3a8a; vertical-align: middle; margin-right: 6px; }
 
-  /* Mobiel (9:16): naam boven, Pokémon groot in het midden, melding eronder; alles gecentreerd naast de ballenkolom */
+  @keyframes rainbow-anim {
+    0% { filter: grayscale(1) sepia(1) hue-rotate(0deg) saturate(3) brightness(1.2); }
+    50% { filter: grayscale(1) sepia(1) hue-rotate(180deg) saturate(3) brightness(1.2); }
+    100% { filter: grayscale(1) sepia(1) hue-rotate(360deg) saturate(3) brightness(1.2); }
+  }
+  .rainbow-outfit { animation: rainbow-anim 4s linear infinite; }
+
   .monwrap { padding-right: 76px; }
   #mon { width: min(calc(100vw - 100px), 40vh); height: min(calc(100vw - 100px), 40vh); }
   #thrown { left: calc(50% - 38px); }
@@ -183,8 +201,8 @@
   #name { font-size: clamp(22px, 8vw, 32px); min-height: 38px; line-height: 38px; }
   #msg { max-width: calc(100% - 84px); margin: 6px 76px 4px 0; font-size: clamp(16px, 5vw, 20px); }
   .spk { margin-left: -38px; }
-  #app .trainer { height: min(23vh, 36vw * 1.5); }
-  #buddy { height: min(10vh, 20vw); }
+  #app .trainer { height: min(28vh, 42vw * 1.5); }
+  #buddy { height: min(11.5vh, 22vw); }
 </style>
 </head>
 <body>
@@ -204,7 +222,10 @@
     <div id="msg"></div>
     <div class="stage">
       <div id="trainer" class="trainer" data-pose="idle"></div>
-      <span id="buddywrap" class="bw" style="display:none"><img id="buddy" alt=""><span id="bdeco"></span></span>
+      <span id="buddywrap" class="bw" style="display:none">
+        <img id="buddy" alt="">
+        <span id="btoy"></span>
+      </span>
       <button id="nobuddy">⭐</button>
     </div>
     <div class="side">
@@ -245,9 +266,8 @@
 <div class="layer" id="dress">
   <div class="bar"><h2>Mijn trainer</h2><button class="pill" id="dressclose">✔ Klaar</button></div>
   <div id="dpreview" class="trainer big-t" data-pose="idle"></div>
-  <div class="tabs" id="dtabs"><button class="pill on" data-k="hair">💇 Haar</button><button class="pill" data-k="color">🎨 Kleur</button><button class="pill" data-k="outfit">👕 Outfit</button><button class="pill" data-k="ocolor">🧵 Kleur kleding</button><button class="pill" data-k="deco">🎀 Versiering buddy</button><button class="pill" data-k="name">✏️ Naam</button></div>
+  <div class="tabs" id="dtabs"><button class="pill on" data-k="hair">💇 Haar</button><button class="pill" data-k="color">🎨 Kleur</button><button class="pill" data-k="outfit">👕 Outfit</button><button class="pill" data-k="ocolor">🧵 Kleur kleding</button><button class="pill" data-k="toy">🧸 Speeltje buddy</button><button class="pill" data-k="name">✏️ Naam</button></div>
   <div id="dopts"></div>
-  <div style="text-align:center;font-size:11px;color:#6b7280;padding:4px 0 10px">versie 28-10 aankleden</div>
 </div>
 
 <div class="layer" id="parent" style="background:#f3f4f6">
@@ -265,9 +285,8 @@
   const $ = id => document.getElementById(id);
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const K = 'pkmnKids', API = 'https://pokeapi.co/api/v2/', ART = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
-  const SHINY = 0.01; // kans op een shiny: 1 op 100 
+  const SHINY = 0.01;
 
-  // Aangepaste dagelijkse limieten (50 Great, 25 Ultra)
   const LIMITS = { poke: Infinity, great: 50, ultra: 25, master: 1 };
 
   const def = { 
@@ -283,14 +302,13 @@
     giftDate: '',
     skips: 0,
     trainer: { hair: 'kort', color: 'bruin', outfit: 'rood', ocolor: 'orig', name: '' },
-    deco: 'geen',
-    buddy: null // { id, shiny } van een gevangen Pokémon
+    toy: 'geen',
+    buddy: null
   };
 
-  // Dagelijks bijvullen tot de limiet; verdiende extra ballen blijven behouden.
-  const refill = b => { const o = { ...b, poke: Infinity }; ['great', 'ultra', 'master'].forEach(k => o[k] = Math.max(+b[k] || 0, LIMITS[k])); o.mega = +b.mega || 0; return o; }; // mega-ballen worden niet bijgevuld, wel bewaard
-  const fresh = () => ({ ...def, balls: { ...def.balls }, trainer: { ...def.trainer }, buddy: null, caught: {}, shinies: {}, v: 2 });
-  // Oude opslag: een shiny telde mee in de gewone Pokédex. Nu staan ze apart; de gewone vangst telt alleen als ze de gewone echt heeft gevangen.
+  const refill = b => { const o = { ...b, poke: Infinity }; ['great', 'ultra', 'master'].forEach(k => o[k] = Math.max(+b[k] || 0, LIMITS[k])); o.mega = +b.mega || 0; return o; };
+  const fresh = () => ({ ...def, balls: { ...def.balls }, trainer: { ...def.trainer }, toy: 'geen', buddy: null, caught: {}, shinies: {}, v: 2 });
+  
   function migrate(d) {
     d.shinies = d.shinies || {};
     d.trainer = { ...def.trainer, ...(d.trainer || {}) };
@@ -303,7 +321,6 @@
       }
       d.v = 2;
     }
-    // Buddy moet een Pokémon zijn die je echt hebt gevangen (ook ruimt dit de oude standaard-Pikachu op)
     const b = d.buddy;
     d.buddy = b && (b.shiny ? d.shinies : d.caught)[b.id] ? { id: +b.id, shiny: !!b.shiny } : null;
     return d;
@@ -360,14 +377,13 @@
     } catch {} 
   }
 
-  // Zacht achtergrondmuziekje (zelf gemaakt, 8-bit stijl) in een lus
   const NOTE = n => { const m = /^([A-G])(#?)(\d)$/.exec(n); const off = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }[m[1]] + (m[2] ? 1 : 0);
     return 440 * Math.pow(2, (12 * (+m[3] + 1) + off - 69) / 12); };
   const MEL = [
     'E5', 0, 'G5', 0, 'E5', 0, 'D5', 'C5',   'C5', 0, 'E5', 0, 'A4', 0, 0, 0,   'A4', 0, 'C5', 0, 'F5', 0, 'E5', 'D5',   'D5', 0, 'G4', 'B4', 'D5', 0, 0, 0,
     'G5', 0, 'E5', 0, 'C5', 0, 'E5', 'G5',   'A5', 0, 'G5', 0, 'E5', 0, 'C5', 0,   'A5', 0, 'F5', 0, 'A5', 0, 'C6', 0,   'B5', 0, 'G5', 0, 'D5', 'B4', 'G4', 0 ];
   const BASS = ['C3', 'G3', 'C3', 'G3', 'A2', 'E3', 'A2', 'E3', 'F2', 'C3', 'F2', 'C3', 'G2', 'D3', 'G2', 'D3'];
-  const STEP = 60 / 100 / 2; // 100 bpm, achtste noten
+  const STEP = 60 / 100 / 2;
   let mStep = 0, mNext = 0, mTimer = null;
   function mnote(f, t, d, type, v) {
     const o = ac.createOscillator(), g = ac.createGain();
@@ -388,10 +404,9 @@
     try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume(); mNext = ac.currentTime + .15; mTimer = setInterval(musicTick, 150); } catch {}
   }
   function musicStop() { clearInterval(mTimer); mTimer = null; }
-  document.addEventListener('pointerdown', musicStart); // browsers staan geluid pas toe na een tik
+  document.addEventListener('pointerdown', musicStart);
   document.addEventListener('visibilitychange', () => { document.hidden ? musicStop() : musicStart(); });
 
-  // Nederlandse zinnen, maar Pokémon-namen worden Engels uitgesproken.
   function sayMix(...parts) {
     if (!S.voice || !('speechSynthesis' in window)) return;
     try {
@@ -472,21 +487,21 @@
     };
   });
 
-  const MAX_SKIPS = 3; // "Andere Pokémon" mag 3x achter elkaar; een vangst of ontsnapping zet hem terug
+  const MAX_SKIPS = 3;
   function updateSkipUI() {
     const left = Math.max(0, MAX_SKIPS - (S.skips || 0));
     $('next').textContent = `🔍 Andere Pokémon (${left})`;
     $('next').classList.toggle('dim', left === 0);
   }
-  const STREAK_BALLS = ['poke', 'great']; // Super-, Ultra- en Master Balls tellen niet mee (te makkelijk)
+  const STREAK_BALLS = ['poke', 'great'];
   const todayStr = () => new Date().toDateString();
   function updateGift() { $('gift').style.display = S.giftDate === todayStr() ? 'none' : 'inline-block'; }
-  function claimGift() { // 1x per dag
+  function claimGift() {
     if (S.giftDate === todayStr()) return;
     S.giftDate = todayStr(); S.balls.mega = (+S.balls.mega || 0) + 10; save(); updateBallUI();
     confetti(); sound('win'); $('msg').textContent = '🎁 10 Super Balls erbij!';
   }
-  function tickTimer() { // aftellen tot middernacht, dan worden de ballen bijgevuld en is het cadeau er weer
+  function tickTimer() {
     const n = new Date(), m = new Date(n); m.setHours(24, 0, 0, 0);
     const t = Math.max(0, Math.floor((m - n) / 1000)), p = x => String(x).padStart(2, '0');
     $('reset-timer').textContent = `🔄 Nieuwe ballen over ${Math.floor(t / 3600)}:${p(Math.floor(t % 3600 / 60))}:${p(t % 60)}`;
@@ -495,12 +510,11 @@
   $('gift').onclick = claimGift; tickTimer(); setInterval(tickTimer, 1000);
 
   const STREAK_GOAL = 5;
-  const REWARD = { great: 10, ultra: 5 }; // beloning voor een volle 🔥 (was 25 Great / 10 Ultra)
-  // Vangkans: hangt af van hoe zeldzaam de Pokémon is (capture_rate van PokéAPI, 3 = zeer zeldzaam, 255 = heel gewoon)
+  const REWARD = { great: 10, ultra: 5 };
   const CATCH = { min: 0.18, spread: 0.50, missBonus: 0.06, cap: 0.95, master: 0.98, mult: { poke: 1, great: 1.3, mega: 1.6, ultra: 2.0 } };
   function updateStreak() {
     $('streak').textContent = `🔥 ${S.streak || 0}/${STREAK_GOAL}`;
-    $('streak').classList.toggle('dim', !STREAK_BALLS.includes(selectedBall)); // gedimd bij een bal die niet meetelt
+    $('streak').classList.toggle('dim', !STREAK_BALLS.includes(selectedBall));
   }
   function breakStreak() { if (S.streak) { S.streak = 0; save(); } updateStreak(); }
   function chooseReward() {
@@ -511,7 +525,6 @@
     });
   }
 
-  // Achtergrond per type: kleuren en zwevende plaatjes
   const TYPES = {
     normal: { sky: '#bae6fd', ground: '#a7f3d0', e: '☁️' }, fire: { sky: '#fdba74', ground: '#b91c1c', e: '🔥' },
     water: { sky: '#7dd3fc', ground: '#0284c7', e: '💧' }, electric: { sky: '#fde68a', ground: '#ca8a04', e: '⚡' },
@@ -536,13 +549,6 @@
     }
   }
 
-  // ===== Trainer (PNG-laagjes) =====
-  // Bestanden in de map trainer/ (alle PNG's even groot, transparant, verhouding 2:3, bv. 800x1200):
-  //   base-{pose}.png            lichaam + gezicht per pose (idle, throw, happy, sad)
-  //   outfit-{id}-{pose}.png     kleding per pose
-  //   hair-{id}-back.png         haar achter het lichaam
-  //   hair-{id}-front.png        haar voor het lichaam (pony, zijkanten)
-  // Haarkleur wordt in de app gedaan (filter), dus teken het haar in één neutrale bruine kleur.
   const POSES = ['idle', 'throw', 'happy', 'sad'];
   const HAIRS = [{ id: 'kort', n: 'Kort' }, { id: 'staart', n: 'Staart' }, { id: 'los', n: 'Los' }, { id: 'staartjes', n: 'Staartjes' }];
   const COLORS = [
@@ -554,55 +560,78 @@
     { id: 'wit', n: 'Wit', c: '#f3f4f6', f: 'grayscale(1) brightness(2.2)' }, { id: 'grijs', n: 'Grijs', c: '#9ca3af', f: 'grayscale(1) brightness(1.25)' }
   ];
   const OUTFITS = [{ id: 'rood', n: '🔴 Avonturier' }, { id: 'blauw', n: '🔵 Sportief' }, { id: 'groen', n: '🟢 Ontdekker' }, { id: 'geel', n: '🟡 Regenjas' }];
-  // Kleur van de kleding: eerst grijs maken en dan inkleuren, zodat elke outfit dezelfde kleur krijgt (wit en zwart blijven licht en donker).
   const tint = (h, b = 1.15) => `grayscale(1) sepia(1) hue-rotate(${h}deg) saturate(3) brightness(${b})`;
+  
   const OCOLORS = [
     { id: 'orig', n: 'Zoals het is', c: 'conic-gradient(#ef4444, #eab308, #22c55e, #3b82f6, #ec4899, #ef4444)', f: 'none' },
+    { id: 'regenboog', n: '🌈 Regenboog', c: 'linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet)', f: 'rainbow', cls: 'rainbow-outfit' },
     { id: 'roze', n: 'Roze', c: '#ec4899', f: tint(292) }, { id: 'paars', n: 'Paars', c: '#8b5cf6', f: tint(242) }, { id: 'blauw', n: 'Blauw', c: '#3b82f6', f: tint(177) },
     { id: 'turkoois', n: 'Turkoois', c: '#14b8a6', f: tint(137) }, { id: 'groen', n: 'Groen', c: '#22c55e', f: tint(87) }, { id: 'geel', n: 'Geel', c: '#eab308', f: tint(17) },
     { id: 'oranje', n: 'Oranje', c: '#f97316', f: tint(350) }, { id: 'rood', n: 'Rood', c: '#ef4444', f: tint(322) },
     { id: 'zwart', n: 'Zwart', c: '#1f2937', f: 'grayscale(1) brightness(.4)' }, { id: 'wit', n: 'Wit', c: '#f3f4f6', f: 'grayscale(1) brightness(1.7)' }
   ];
-  const DECOS = [{ id: 'geen', n: 'Geen' }, { id: 'strik', n: 'Strik', e: '🎀' }, { id: 'kroon', n: 'Kroon', e: '👑' }, { id: 'hoed', n: 'Hoedje', e: '🎩' },
-    { id: 'bloem', n: 'Bloem', e: '🌸' }, { id: 'ster', n: 'Ster', e: '⭐' }, { id: 'pet', n: 'Pet', e: '🧢' }, { id: 'hart', n: 'Hartje', e: '❤️' }];
-  // Meer haarstijlen of outfits? Zet de PNG's in trainer/ en vermeld ze in trainer/manifest.json: { "hairs": [{ "id": "..", "n": ".." }], "outfits": [{ "id": "..", "n": ".." }] }
+
+  const TOYS = [
+    { id: 'geen', n: 'Geen' }, 
+    { id: 'pokeball', n: 'Pokébal Speelbal', e: '🔴' }, 
+    { id: 'tennisbal', n: 'Tennisbal', e: '🎾' }, 
+    { id: 'kussen', n: 'Slaapkussen', e: '💤' },
+    { id: 'bessen', n: 'Oran Berry', e: '🍃' }, 
+    { id: 'knuffel', n: 'Sterren-Knuffel', e: '⭐' }, 
+    { id: 'bel', n: 'Klokje', e: '🔔' }
+  ];
+
   fetch('trainer/manifest.json').then(r => (r.ok ? r.json() : null)).then(m => {
     if (!m) return;
     [[HAIRS, m.hairs], [OUTFITS, m.outfits]].forEach(([arr, add]) => (add || []).forEach(o => { if (o && o.id && !arr.some(x => x.id === o.id)) arr.push({ id: String(o.id), n: String(o.n || o.id) }); }));
     if ($('dress').classList.contains('on')) renderDress();
   }).catch(() => {});
-  function renderDeco() { $('bdeco').textContent = (DECOS.find(d => d.id === S.deco) || DECOS[0]).e || ''; }
-  function updateNames() { // naam van de trainer in de titels
+
+  function renderToy() { 
+    const t = TOYS.find(x => x.id === (S.toy || 'geen')) || TOYS[0];
+    $('btoy').textContent = t.e || ''; 
+  }
+
+  function updateNames() {
     const n = (S.trainer.name || '').trim();
     const h = document.querySelector('#dex .bar h2'); if (h && h.firstChild) h.firstChild.textContent = (n ? 'Pokédex van ' + n : 'Mijn Pokédex') + ' ';
     const d = document.querySelector('#dress .bar h2'); if (d) d.textContent = n || 'Mijn trainer';
   }
+
   function trainerHTML(pose, t = S.trainer) {
     const f = (COLORS.find(c => c.id === t.color) || COLORS[0]).f;
+    const oc = OCOLORS.find(c => c.id === t.ocolor) || OCOLORS[0];
+    const outfitStyle = oc.f === 'rainbow' ? '' : `filter:${oc.f}`;
+    const outfitClass = oc.cls ? `class="${oc.cls}"` : '';
+
     const L = (name, style = '', extra = '') => `<img src="trainer/${name}.png" alt="" style="${style}" onerror="this.style.display='none'" ${extra}>`;
     return '<span class="tfb">🧒</span>'
       + L(`hair-${t.hair}-back`, `filter:${f}`)
       + L(`base-${pose}`, '', `onload="this.parentNode.querySelector('.tfb').style.display='none'"`)
-      + L(`outfit-${t.outfit}-${pose}`, `filter:${(OCOLORS.find(c => c.id === t.ocolor) || OCOLORS[0]).f}`)
+      + L(`outfit-${t.outfit}-${pose}`, outfitStyle, outfitClass)
       + L(`hair-${t.hair}-front`, `filter:${f}`);
   }
+
   function renderBuddy() {
     const b = $('buddy'), nb = $('nobuddy'), w = $('buddywrap');
-    renderDeco(); updateNames();
+    renderToy(); updateNames();
     if (!S.buddy) { w.style.display = 'none'; nb.style.display = ''; return; }
     nb.style.display = 'none'; w.style.display = '';
     b.onerror = () => { w.style.display = 'none'; nb.style.display = ''; };
     b.src = ART + (S.buddy.shiny ? 'shiny/' : '') + S.buddy.id + '.png';
   }
+
   const BALLNAME = { poke: 'Poké Ball', great: 'Great Ball', mega: 'Super Ball', ultra: 'Ultra Ball', master: 'Master Ball' };
-  function markDex() { // naast de naam: pokéball als hij al in de Pokédex staat, anders "NIEUW"
+  function markDex() {
     const rec = cur && (cur.shiny ? S.shinies : S.caught)[cur.id];
     const b = rec && (rec.ball || 'poke');
     $('dexmark').innerHTML = rec ? `<span class="ball ball-${b}" title="Al in je Pokédex"></span>` : '<span class="new">NIEUW</span>';
   }
-  let pickMode = false; // true = Pokédex geopend om een buddy te kiezen
+
+  let pickMode = false;
   $('buddy').onclick = $('nobuddy').onclick = () => { pickMode = true; renderDex(); $('dex').classList.add('on'); };
-  function sparkles(on) { // glinsterende sterretjes rond een shiny
+  
+  function sparkles(on) {
     const w = document.querySelector('.monwrap');
     w.querySelectorAll('.spk').forEach(e => e.remove());
     if (!on) return;
@@ -614,13 +643,15 @@
       w.append(s);
     }
   }
+
   let poseTimer = null;
-  function setPose(p, back) { // back = na zoveel ms terug naar idle
+  function setPose(p, back) {
     clearTimeout(poseTimer);
     $('buddywrap').classList.toggle('hop', p === 'happy');
     const el = $('trainer'); el.dataset.pose = p; el.innerHTML = trainerHTML(p);
     if (back) poseTimer = setTimeout(() => setPose('idle'), back);
   }
+
   let dtab = 'hair';
   function renderDress() {
     $('dpreview').innerHTML = trainerHTML('idle');
@@ -631,11 +662,22 @@
       inp.oninput = () => { S.trainer.name = inp.value.slice(0, 14); save(); updateNames(); };
       return;
     }
-    const list = { hair: HAIRS, color: COLORS, outfit: OUTFITS, ocolor: OCOLORS, deco: DECOS }[dtab] || HAIRS;
-    const curv = dtab === 'deco' ? S.deco : S.trainer[dtab];
+    const list = { hair: HAIRS, color: COLORS, outfit: OUTFITS, ocolor: OCOLORS, toy: TOYS }[dtab] || HAIRS;
+    const curv = dtab === 'toy' ? (S.toy || 'geen') : S.trainer[dtab];
     $('dopts').innerHTML = list.map(o => `<button class="pill ${curv === o.id ? 'on' : ''}" data-id="${o.id}">${o.c ? `<span class="sw" style="background:${o.c}"></span>` : ''}${o.e ? o.e + ' ' : ''}${o.n}</button>`).join('');
   }
-  $('dopts').onclick = e => { const b = e.target.closest('[data-id]'); if (!b) return; if (dtab === 'deco') S.deco = b.dataset.id; else S.trainer[dtab] = b.dataset.id; save(); renderDress(); renderDeco(); setPose($('trainer').dataset.pose); };
+
+  $('dopts').onclick = e => { 
+    const b = e.target.closest('[data-id]'); 
+    if (!b) return; 
+    if (dtab === 'toy') S.toy = b.dataset.id; 
+    else S.trainer[dtab] = b.dataset.id; 
+    save(); 
+    renderDress(); 
+    renderToy(); 
+    setPose($('trainer').dataset.pose); 
+  };
+
   $('dtabs').onclick = e => { const b = e.target.closest('[data-k]'); if (!b) return; dtab = b.dataset.k; renderDress(); };
   $('trainerbtn').onclick = () => { renderDress(); $('dress').classList.add('on'); };
   $('dressclose').onclick = () => { $('dress').classList.remove('on'); setPose('idle'); };
@@ -688,12 +730,12 @@
   }
 
   function getCatchParams(ball) {
-    const base = CATCH.min + CATCH.spread * (cur.rate / 255); // gewoon ~55%, zeldzaam ~10-20%
+    const base = CATCH.min + CATCH.spread * (cur.rate / 255);
     const p = ball === 'master' ? CATCH.master
       : Math.min(CATCH.cap, (base + Math.min(misses, 5) * CATCH.missBonus) * (CATCH.mult[ball] || 1));
 
     const success = Math.random() < p;
-    const fleeRate = 0.08 + 0.22 * (1 - cur.rate / 255); // zeldzame Pokémon rennen vaker weg
+    const fleeRate = 0.08 + 0.22 * (1 - cur.rate / 255);
     const flees = !success && (Math.random() < fleeRate);
 
     return { success, flees };
@@ -701,7 +743,7 @@
 
   async function throwBall() {
     if (busy || !cur) return;
-    const usedBall = selectedBall; // de bal die nu gegooid wordt (selectedBall kan veranderen als hij op is) 
+    const usedBall = selectedBall;
 
     if (S.balls[selectedBall] <= 0 && selectedBall !== 'poke') {
       $('msg').textContent = 'Op voorraad voor vandaag! Kies een andere bal.';
@@ -723,7 +765,7 @@
 
     sound('throw');
     setPose('throw');
-    document.querySelector('.monwrap').classList.add('quiet'); // sparkles even weg tijdens het gooien
+    document.querySelector('.monwrap').classList.add('quiet');
     $('msg').textContent = '';
     ball.classList.add('fly'); 
     await sleep(800);
@@ -744,14 +786,14 @@
     await sleep(1100);
 
     if (success) {
-      const bucket = cur.shiny ? S.shinies : S.caught; // shiny's staan apart en tellen niet mee voor de gewone Pokédex
+      const bucket = cur.shiny ? S.shinies : S.caught;
       const c = bucket[cur.id] || (bucket[cur.id] = { n: 0, name: cur.name, at: Date.now() }), isNew = c.n === 0;
-      c.n++; c.b = c.b || {}; c.b[usedBall] = (c.b[usedBall] || 0) + 1; if (isNew) c.ball = usedBall; // onthoud met welke bal
+      c.n++; c.b = c.b || {}; c.b[usedBall] = (c.b[usedBall] || 0) + 1; if (isNew) c.ball = usedBall;
       save();
       $('count').textContent = total();
-      S.skips = 0; save(); updateSkipUI(); // vangst: zoeken weer 3x mogelijk
+      S.skips = 0; save(); updateSkipUI();
       let reward = false;
-      if (misses === 0 && STREAK_BALLS.includes(usedBall)) { // gevangen in één worp met een gewone bal
+      if (misses === 0 && STREAK_BALLS.includes(usedBall)) {
         S.streak = (S.streak || 0) + 1;
         if (S.streak >= STREAK_GOAL) { S.streak = 0; reward = true; }
         save(); updateStreak();
@@ -771,7 +813,7 @@
       setPose('sad');
       ball.style.display = 'none';
       mon.style.opacity = 1;
-      S.skips = 0; save(); updateSkipUI(); // ontsnapt: zoeken weer 3x mogelijk
+      S.skips = 0; save(); updateSkipUI();
       if (STREAK_BALLS.includes(usedBall)) breakStreak();
       $('msg').textContent = 'Oh nee! Hij is uit de bal gekomen...';
       await sleep(1000);
@@ -802,7 +844,7 @@
     $('pickhint').style.display = pickMode ? 'block' : 'none';
     const shinyTab = tab === 'shiny';
     const ids = shinyTab
-      ? Object.keys(S.shinies).map(Number).filter(i => i <= S.size).sort((a, b) => (S.shinies[a].at || 0) - (S.shinies[b].at || 0) || a - b) // op volgorde van vangen
+      ? Object.keys(S.shinies).map(Number).filter(i => i <= S.size).sort((a, b) => (S.shinies[a].at || 0) - (S.shinies[b].at || 0) || a - b)
       : Array.from({ length: S.size }, (_, i) => i + 1);
     const n = shinyTab ? ids.length : total();
     $('dcount').textContent = shinyTab ? '✨ ' + n : n + '/' + S.size;
@@ -821,7 +863,7 @@
     const c = e.target.closest('.card[data-id]'); 
     if (!c) return; 
     const id = c.dataset.id, sh = tab === 'shiny', d = (sh ? S.shinies : S.caught)[id];
-    if (pickMode) { // buddy kiezen: direct instellen en terug naar het spel
+    if (pickMode) {
       S.buddy = { id: +id, shiny: sh }; save(); renderBuddy(); pickMode = false;
       $('dex').classList.remove('on'); say(d.name, 'en-US'); return;
     }
@@ -909,7 +951,7 @@
   $('throw').onclick = throwBall;
   $('next').onclick = () => {
     if (busy && cur) return;
-    if (!cur) { spawn(); return; } // geen internet eerder: opnieuw proberen telt niet mee
+    if (!cur) { spawn(); return; }
     if ((S.skips || 0) >= MAX_SKIPS) { $('msg').textContent = 'Je hebt 3 keer gezocht. Probeer deze Pokémon te vangen! 💪'; return; }
     S.skips = (S.skips || 0) + 1; save(); updateSkipUI();
     try { speechSynthesis.cancel(); } catch {}
