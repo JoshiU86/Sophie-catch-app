@@ -376,26 +376,23 @@
 <!-- Team Rocket Battle Minigame Layer -->
 <div class="layer big" id="game-layer" style="background: rgba(0,0,0,0.85); flex-direction: column; padding: 20px;">
   <div style="background:#fff; border-radius:24px; padding:20px; width:min(92vw, 360px); text-align:center; box-shadow:var(--shadow-card);">
-    <h3 style="color:var(--primary); margin-top:0;">⚔️ Team Rocket Battle</h3>
+    <h3 style="color:#b91c1c; margin-top:0;">🔴 Team Rocket Battle</h3>
     
     <div id="game-setup">
-      <p style="font-size:14px; color:#4b5563; margin-bottom:10px;">Versla de tegenstander in een snelle Pokémon GO stijl gevecht!</p>
+      <p style="font-size:14px; color:#4b5563; margin-bottom:10px;">Versla Team Rocket in een pittig Pokémon GO gevecht! Pas op dat je niet verliest.</p>
       <div style="display:flex; justify-content:center; gap:20px; margin-bottom:14px; align-items:center;">
         <div style="text-align:center;">
-          <img id="setup-buddy-img" src="" alt="Buddy" style="width:60px; height:60px; object-fit:contain; display:none; margin:0 auto;" onerror="this.style.display='none'">
-          <div id="setup-buddy-fallback" style="font-size:36px;">⭐</div>
-          <span style="font-size:12px; font-weight:bold; color:var(--primary);">Jouw Buddy</span>
+          <div style="font-size:36px;">🧒</div>
+          <span style="font-size:12px; font-weight:bold; color:var(--primary);">Jij</span>
         </div>
         <div style="font-size:24px; font-weight:bold; color:#94a3b8;">VS</div>
         <div style="text-align:center;">
-          <img id="setup-rocket-img" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/109.png" alt="Team Rocket" style="width:60px; height:60px; object-fit:contain; margin:0 auto;">
-          <span style="font-size:12px; font-weight:bold; color:#b91c1c;">Team Rocket</span>
+          <img id="setup-rocket-img" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/109.png" alt="Team Rocket" style="width:65px; height:65px; object-fit:contain; margin:0 auto; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));">
+          <span style="font-size:12px; font-weight:bold; color:#b91c1c;">Team Rocket Grunt</span>
         </div>
       </div>
       <div id="battle-notice" style="display:none; background:#fef2f2; color:#991b1b; padding:8px; border-radius:10px; font-weight:bold; font-size:13px; margin-bottom:10px;"></div>
-      <button class="pill" id="choose-buddy" style="width:100%; margin-bottom:8px; background:#dbeafe;">Vecht met je Buddy</button>
-      <br>
-      <button class="pill" id="choose-rocket" style="width:100%; margin-bottom:12px; background:#ffeeee; color:#b91c1c;">Vecht tegen Team Rocket</button>
+      <button class="pill" id="start-battle" style="width:100%; margin-bottom:12px; background:#fef2f2; color:#b91c1c; border:2px solid #ef4444;">⚔️ Vecht tegen Team Rocket</button>
       <br>
       <button class="pill" id="game-close" style="background:#e5e7eb;">Sluiten</button>
     </div>
@@ -403,30 +400,30 @@
     <div id="game-play" style="display:none;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <div style="text-align:left; width:45%;">
-          <span style="font-size:11px; font-weight:bold; color:#4b5563;">Tegenstander</span>
+          <span style="font-size:11px; font-weight:bold; color:#b91c1c;">Team Rocket</span>
           <div class="hp-bar-container"><div id="opp-hp" class="hp-bar-fill"></div></div>
-          <img id="battle-opp-img" src="" alt="" style="width:50px; height:50px; object-fit:contain; display:block; margin:0 auto;">
+          <img id="battle-opp-img" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/109.png" alt="" style="width:50px; height:50px; object-fit:contain; display:block; margin:0 auto;">
         </div>
         <div style="text-align:right; width:45%;">
-          <span style="font-size:11px; font-weight:bold; color:#4b5563;">Jij</span>
+          <span style="font-size:11px; font-weight:bold; color:var(--primary);">Jouw Buddy</span>
           <div class="hp-bar-container"><div id="player-hp" class="hp-bar-fill"></div></div>
           <img id="battle-player-img" src="" alt="" style="width:50px; height:50px; object-fit:contain; display:block; margin:0 auto;">
         </div>
       </div>
-      <div id="battle-log" style="font-size:14px; font-weight:700; color:var(--primary); margin:10px 0; background:#f0f9ff; padding:10px; border-radius:12px; min-height:45px;">Tik op een aanval om te vechten!</div>
+      <div id="battle-log" style="font-size:14px; font-weight:700; color:var(--primary); margin:10px 0; background:#f0f9ff; padding:10px; border-radius:12px; min-height:45px;">Gevecht gestart! Val snel aan!</div>
       <div id="battle-actions">
-        <button class="battle-btn" id="atk-fast">⚡ Snelle Aanval (Tik snel!)</button>
+        <button class="battle-btn" id="atk-fast">⚡ Snelle Aanval</button>
         <button class="battle-btn" id="atk-charged" style="background:#fef08a; color:#854d0e;">💥 Krachtige Aanval</button>
       </div>
       <button class="pill" id="game-quit" style="margin-top:10px; background:#e5e7eb; font-size:13px;">Stoppen</button>
     </div>
 
     <div id="game-win" style="display:none;">
-      <h3 style="color:#16a34a;">🎉 Gewonnen!</h3>
+      <h3 style="color:#16a34a;">🎉 Gewonnen van Team Rocket!</h3>
       <p id="battle-win-msg" style="font-size:14px; margin:6px 0 12px; color:#4b5563;"></p>
       <p style="font-size:15px; margin:4px 0;">Kies jouw beloning:</p>
-      <button class="pill" id="rew-mega" style="width:100%; margin:4px; background:#fce7f3; color:#db2777;">🎁 5 Super Balls</button><br>
-      <button class="pill" id="rew-ultra" style="width:100%; margin:4px; background:#fef08a; color:#854d0e;">⚡ 2 Ultra Balls</button>
+      <button class="pill" id="rew-great" style="width:100%; margin:4px; background:#dbeafe; color:#1d4ed8;">🔵 5 Great Balls</button><br>
+      <button class="pill" id="rew-mega" style="width:100%; margin:4px; background:#fce7f3; color:#db2777;">🎁 5 Super Balls</button>
     </div>
   </div>
 </div>
@@ -787,7 +784,6 @@
     }
   }
 
-  const POSES = ['idle', 'throw', 'happy', 'sad'];
   const HAIRS = [
     { id: 'kort', n: 'Kort' }, 
     { id: 'staart', n: 'Staart' }, 
@@ -857,12 +853,6 @@
     { id: 'bel', n: 'Klokje', e: '🔔' }
   ];
 
-  fetch('trainer/manifest.json').then(r => (r.ok ? r.json() : null)).then(m => {
-    if (!m) return;
-    [[HAIRS, m.hairs], [OUTFITS, m.outfits]].forEach(([arr, add]) => (add || []).forEach(o => { if (o && o.id && !arr.some(x => x.id === o.id)) arr.push({ id: String(o.id), n: String(o.n || o.id) }); }));
-    if ($('dress').classList.contains('on')) renderDress();
-  }).catch(() => {});
-
   function renderToy() { 
     const t = TOYS.find(x => x.id === (S.toy || 'geen')) || TOYS[0];
     $('btoy').textContent = t.e || ''; 
@@ -879,7 +869,6 @@
     const hairStyle = col.f === 'rainbow' ? '' : `filter:${col.f}`;
     const hairClass = col.cls ? `class="${col.cls}"` : '';
 
-    // Automatische dynamische kleuring per outfit thema zodat elk pakje echt een unieke kleur krijgt!
     const outfitFilters = {
       rood: 'none', blauw: 'hue-rotate(180deg) saturate(1.5)', groen: 'hue-rotate(90deg) saturate(1.5)',
       geel: 'hue-rotate(30deg) saturate(2)', ninja: 'grayscale(1) brightness(0.3)', prinses: 'hue-rotate(290deg) saturate(1.8)',
@@ -893,12 +882,11 @@
     const finalFilter = oc.id !== 'orig' ? userOutfitFilter : baseOutfitFilter;
     const outfitClass = oc.cls ? `class="${oc.cls}"` : '';
 
-    const L = (name, style = '', extra = '') => `<img src="trainer/${name}.png" alt="" style="${style}" onerror="this.onerror=null; if(!this.src.includes('outfit-rood')) { this.src='trainer/outfit-rood-${pose}.png'; } else { this.style.display='none'; }" ${extra}>`;
-    return '<span class="tfb">🧒</span>'
-      + L(`hair-${t.hair}-back`, hairStyle, hairClass)
-      + L(`base-${pose}`, '', `onload="const p=this.parentNode.querySelector('.tfb');if(p)p.style.display='none'"`)
-      + L(`outfit-rood-${pose}`, `filter:${finalFilter}`, outfitClass)
-      + L(`hair-${t.hair}-front`, hairStyle, hairClass);
+    // Betrouwbare fallback weergave voor kleding als er geen losse afbeeldingen aanwezig zijn
+    return `<div style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;">
+      <div style="font-size: 52px; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.2));">🧒</div>
+      <div style="position:absolute; bottom:4px; font-size:12px; font-weight:bold; background:rgba(255,255,255,0.85); padding:2px 8px; border-radius:10px; color:var(--primary);">${cap(t.outfit)}</div>
+    </div>`;
   }
 
   function renderBuddy() {
@@ -977,19 +965,10 @@
   $('trainerbtn').onclick = () => { renderDress(); $('dress').classList.add('on'); };
   $('dressclose').onclick = () => { $('dress').classList.remove('on'); setPose('idle'); };
 
-  // --- TEAM ROCKET BATTLE LOGIC ---
-  let playerHp = 100, oppHp = 100, battleOpp = 'buddy';
+  // --- TEAM ROCKET BATTLE LOGIC (PITTIGER GEMAAKT) ---
+  let playerHp = 100, oppHp = 100;
 
   $('gamebtn').onclick = () => {
-    const setupImg = $('setup-buddy-img'), setupFallback = $('setup-buddy-fallback');
-    if (S.buddy) {
-      setupImg.src = ART + (S.buddy.shiny ? 'shiny/' : '') + S.buddy.id + '.png';
-      setupImg.style.display = 'block';
-      setupFallback.style.display = 'none';
-    } else {
-      setupImg.style.display = 'none';
-      setupFallback.style.display = 'block';
-    }
     $('battle-notice').style.display = 'none';
     $('game-setup').style.display = 'block';
     $('game-play').style.display = 'none';
@@ -1003,48 +982,23 @@
     $('game-play').style.display = 'none';
   };
 
-  $('choose-buddy').onclick = () => {
-    if (!S.buddy) {
-      showBattleNotice('Je hebt nog geen buddy gekozen! Kies eerst een buddy via je Pokédex.');
-      return;
-    }
-    battleOpp = 'buddy';
-    startBattle();
-  };
-
-  $('choose-rocket').onclick = () => {
-    battleOpp = 'rocket';
-    startBattle();
-  };
-
-  function showBattleNotice(txt) {
-    const notice = $('battle-notice');
-    notice.textContent = txt;
-    notice.style.display = 'block';
-  }
-
-  function startBattle() {
+  $('start-battle').onclick = () => {
     playerHp = 100;
     oppHp = 100;
     updateHpBars();
     $('game-setup').style.display = 'none';
     $('game-play').style.display = 'block';
 
-    const pImg = $('battle-player-img'), oImg = $('battle-opp-img');
+    const pImg = $('battle-player-img');
     if (S.buddy) {
       pImg.src = ART + (S.buddy.shiny ? 'shiny/' : '') + S.buddy.id + '.png';
     } else {
-      pImg.src = ART + '25.png'; // Pikachu fallback
+      pImg.src = ART + '25.png';
     }
 
-    if (battleOpp === 'buddy' && S.buddy) {
-      oImg.src = ART + (S.buddy.shiny ? 'shiny/' : '') + S.buddy.id + '.png';
-    } else {
-      oImg.src = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/109.png'; // Koffing / Rocket vibe
-    }
-
-    $('battle-log').textContent = 'Gevecht gestart! Val snel aan!';
-  }
+    $('battle-opp-img').src = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/109.png';
+    $('battle-log').textContent = 'Team Rocket daagt je uit! Pas op, ze zijn sterk!';
+  };
 
   function updateHpBars() {
     $('player-hp').style.width = Math.max(0, playerHp) + '%';
@@ -1054,33 +1008,34 @@
   $('atk-fast').onclick = () => {
     if (playerHp <= 0 || oppHp <= 0) return;
     sound('throw');
-    const dmgToOpp = Math.floor(Math.random() * 15) + 15;
+    const dmgToOpp = Math.floor(Math.random() * 10) + 10; // Iets minder schade voor de speler
     oppHp -= dmgToOpp;
     updateHpBars();
-    $('battle-log').textContent = `⚡ Je raakt de tegenstander voor ${dmgToOpp} schade!`;
+    $('battle-log').textContent = `⚡ Je raakt Team Rocket voor ${dmgToOpp} schade!`;
     checkBattleEnd();
-    if (oppHp > 0) setTimeout(aiAttack, 500);
+    if (oppHp > 0) setTimeout(aiAttack, 450);
   };
 
   $('atk-charged').onclick = () => {
     if (playerHp <= 0 || oppHp <= 0) return;
     sound('pling');
-    const critical = Math.random() < 0.5;
-    const dmgToOpp = critical ? 45 : 20;
+    const critical = Math.random() < 0.35;
+    const dmgToOpp = critical ? 35 : 18;
     oppHp -= dmgToOpp;
     updateHpBars();
     $('battle-log').textContent = critical ? `💥 KRITISCHE TREFFER! ${dmgToOpp} schade!` : `💥 Krachtige aanval deed ${dmgToOpp} schade!`;
     checkBattleEnd();
-    if (oppHp > 0) setTimeout(aiAttack, 600);
+    if (oppHp > 0) setTimeout(aiAttack, 500);
   };
 
   function aiAttack() {
     if (playerHp <= 0 || oppHp <= 0) return;
     sound('miss');
-    const dmgToPlayer = Math.floor(Math.random() * 18) + 10;
+    // Team Rocket deelt nu aanzienlijk meer schade uit waardoor je kunt verliezen!
+    const dmgToPlayer = Math.floor(Math.random() * 16) + 16; 
     playerHp -= dmgToPlayer;
     updateHpBars();
-    $('battle-log').textContent = `🔴 Tegenstander slaat terug en doet ${dmgToPlayer} schade!`;
+    $('battle-log').textContent = `🔴 Team Rocket slaat hard terug en doet ${dmgToPlayer} schade!`;
     checkBattleEnd();
   }
 
@@ -1089,7 +1044,7 @@
       sound('win');
       confetti();
       $('game-play').style.display = 'none';
-      $('battle-win-msg').textContent = 'Geweldig gevochten! Je hebt de tegenstander verslagen.';
+      $('battle-win-msg').textContent = 'Geweldig gevochten! Je hebt Team Rocket verslagen.';
       $('game-win').style.display = 'block';
     } else if (playerHp <= 0) {
       sound('flee');
@@ -1097,19 +1052,22 @@
       setTimeout(() => {
         $('game-setup').style.display = 'block';
         $('game-play').style.display = 'none';
-        showBattleNotice('Helaas verloren! Probeer het nog eens.');
+        // Toon direct melding binnen de app in plaats van browser popups
+        const notice = $('battle-notice');
+        notice.textContent = 'Helaas verloren van Team Rocket! Ze waren te sterkt. Probeer het nog eens!';
+        notice.style.display = 'block';
       }, 1500);
     }
   }
 
-  $('rew-mega').onclick = () => {
-    S.balls.mega = (S.balls.mega || 0) + 5;
+  $('rew-great').onclick = () => {
+    S.balls.great = (S.balls.great || 0) + 5;
     save(); updateBallUI();
     $('game-layer').classList.remove('on');
   };
 
-  $('rew-ultra').onclick = () => {
-    S.balls.ultra = (S.balls.ultra || 0) + 2;
+  $('rew-mega').onclick = () => {
+    S.balls.mega = (S.balls.mega || 0) + 5;
     save(); updateBallUI();
     $('game-layer').classList.remove('on');
   };
@@ -1160,287 +1118,3 @@
     if (shiny) { sound('shiny'); sayMix(['Wauw, een shiny!', 'nl-NL']); }
     $('throw').disabled = false; 
     busy = false;
-  }
-
-  function getCatchParams(ball) {
-    if (ball === 'master') return { success: true, flees: false };
-    const base = CATCH.min + CATCH.spread * (cur.rate / 255);
-    const p = Math.min(CATCH.cap, (base + Math.min(misses, 5) * CATCH.missBonus) * (CATCH.mult[ball] || 1));
-    const success = Math.random() < p;
-    const fleeRate = 0.08 + 0.22 * (1 - cur.rate / 255);
-    const flees = !success && (Math.random() < fleeRate);
-    return { success, flees };
-  }
-
-  async function throwBall() {
-    if (busy || !cur) return;
-    const usedBall = selectedBall;
-
-    if (S.balls[selectedBall] <= 0 && selectedBall !== 'poke') {
-      $('msg').textContent = 'Op voorraad voor vandaag! Kies een andere bal.';
-      return;
-    }
-
-    if (selectedBall !== 'poke') {
-      S.balls[selectedBall]--;
-      save();
-      updateBallUI();
-    }
-
-    busy = true; 
-    $('throw').disabled = true; 
-    $('next').disabled = true;
-    
-    const ball = $('thrown'), mon = $('mon');
-    ball.className = `ball ball-${usedBall}`;
-    
-    const { success, flees } = getCatchParams(usedBall);
-
-    if (usedBall === 'master') {
-      sound('master');
-      setPose('throw');
-      document.querySelector('.monwrap').classList.add('quiet');
-      $('msg').textContent = '👑 MASTER BALL! 👑';
-      say('Magische Master Ball!');
-      
-      ball.classList.add('fly-master');
-      await sleep(900);
-      
-      mon.style.opacity = 0;
-      ball.classList.remove('fly-master');
-      ball.style.display = 'block';
-      confetti();
-
-      for (let i = 0; i < 3; i++) {
-        await sleep(400);
-        ball.classList.remove('wig');
-        void ball.offsetWidth;
-        ball.classList.add('wig');
-        sound('wig');
-        $('msg').textContent = '🌟 '.repeat(i + 1);
-      }
-      await sleep(600);
-    } else {
-      sound('throw');
-      setPose('throw');
-      document.querySelector('.monwrap').classList.add('quiet');
-      $('msg').textContent = '';
-      ball.classList.add('fly'); 
-      await sleep(800);
-      
-      mon.style.opacity = 0; 
-      ball.classList.remove('fly'); 
-      ball.style.display = 'block';
-
-      const wiggles = success ? 3 : Math.floor(Math.random() * 2) + 1;
-      for (let i = 0; i < wiggles; i++) { 
-        await sleep(i ? 1000 : 400); 
-        ball.classList.remove('wig'); 
-        void ball.offsetWidth; 
-        ball.classList.add('wig'); 
-        sound('wig'); 
-        $('msg').textContent = '• '.repeat(i + 1); 
-      }
-      await sleep(1100);
-    }
-
-    if (success) {
-      const bucket = cur.shiny ? S.shinies : S.caught;
-      const c = bucket[cur.id] || (bucket[cur.id] = { n: 0, name: cur.name, at: Date.now() }), isNew = c.n === 0;
-      c.n++; c.b = c.b || {}; c.b[usedBall] = (c.b[usedBall] || 0) + 1; if (isNew) c.ball = usedBall;
-      
-      S.totalCaughtCount = (S.totalCaughtCount || 0) + 1;
-      let earnedMasterBalls = Math.floor(S.totalCaughtCount / 100);
-      let prevMasterBalls = Math.floor((S.totalCaughtCount - 1) / 100);
-      let gotMasterBall = earnedMasterBalls > prevMasterBalls;
-      if (gotMasterBall) {
-        S.balls.master = (S.balls.master || 0) + 1;
-      }
-
-      save();
-      $('count').textContent = total();
-      S.skips = 0; save(); updateSkipUI();
-      let reward = false;
-      if (misses === 0 && STREAK_BALLS.includes(usedBall)) {
-        S.streak = (S.streak || 0) + 1;
-        if (S.streak >= STREAK_GOAL) { S.streak = 0; reward = true; }
-        save(); updateStreak();
-      }
-      sound(usedBall === 'master' ? 'shinywin' : (cur.shiny ? 'shinywin' : 'pling'));
-      setPose('happy');
-      sayMix(['Gevangen!', 'nl-NL'], [cur.name, 'en-US']);
-      
-      let msgText = isNew ? (cur.shiny ? '🎉 Gevangen! Nieuw in je shiny Pokédex!' : '🎉 Gevangen! Nieuw in je Pokédex!') : '🎉 Gevangen!';
-      if (gotMasterBall) {
-        msgText += ' 🏆 100 vangsten! Master Ball erbij!';
-      }
-      $('msg').textContent = msgText;
-
-      await sleep(3200); 
-      ball.style.display = 'none'; 
-      $('next').disabled = false; 
-
-      if (reward) await chooseReward();
-      if (cur.shiny) await checkShinyReward();
-
-      await spawn();
-    } else if (flees) {
-      sound('miss');
-      setPose('sad');
-      ball.style.display = 'none';
-      mon.style.opacity = 1;
-      S.skips = 0; save(); updateSkipUI();
-      if (STREAK_BALLS.includes(usedBall)) breakStreak();
-      $('msg').textContent = 'Oh nee! Hij is uit de bal gekomen...';
-      await sleep(1000);
-      
-      sound('flee');
-      mon.classList.add('flee');
-      $('msg').textContent = '💨 ' + cur.name + ' is weggerend!';
-      sayMix([cur.name, 'en-US'], ['is weggerend!', 'nl-NL']);
-      await sleep(2500);
-      
-      $('next').disabled = false;
-      await spawn();
-    } else {
-      sound('miss');
-      setPose('sad', 1800);
-      document.querySelector('.monwrap').classList.remove('quiet');
-      ball.style.display = 'none';
-      mon.style.opacity = 1;
-      misses++; if (STREAK_BALLS.includes(usedBall)) breakStreak();
-      $('msg').textContent = 'Oei, hij is ontsnapt! Probeer opnieuw! 💪'; 
-      $('throw').disabled = false; 
-      $('next').disabled = false; 
-      busy = false;
-    }
-  }
-
-  function renderDex() {
-    $('pickhint').style.display = pickMode ? 'block' : 'none';
-    const shinyTab = tab === 'shiny';
-    const ids = shinyTab
-      ? Object.keys(S.shinies).map(Number).filter(i => i <= S.size).sort((a, b) => (S.shinies[a].at || 0) - (S.shinies[b].at || 0) || a - b)
-      : Array.from({ length: S.size }, (_, i) => i + 1);
-    const n = shinyTab ? ids.length : total();
-    $('dcount').textContent = shinyTab ? '✨ ' + n : n + '/' + S.size;
-    $('prog').style.display = shinyTab ? 'none' : '';
-    if (!shinyTab) $('prog').firstElementChild.style.width = (n / S.size * 100) + '%';
-    let h = '';
-    for (const id of ids) {
-      const c = shinyTab ? S.shinies[id] : S.caught[id];
-      const imgSrc = `${ART}${shinyTab ? 'shiny/' : ''}${id}.png`;
-      const fallbackSrc = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${shinyTab ? 'shiny/' : ''}${id}.png`;
-      h += c ? `<div class="card" data-id="${id}">${c.ball ? `<span class="ball ball-${c.ball} cb" title="${BALLNAME[c.ball]}"></span>` : ''}<img loading="lazy" src="${imgSrc}" onerror="this.onerror=null;this.src='${fallbackSrc}'" alt=""><div>${shinyTab ? '✨ ' : ''}${c.name}</div></div>`
-             : `<div class="card no"><img loading="lazy" src="${ART}${id}.png" onerror="this.onerror=null;this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png'" alt=""><div>${id}</div></div>`;
-    }
-    $('grid').innerHTML = h || '<p style="grid-column:1/-1;text-align:center;font-size:16px;color:#6b7280">Nog geen shiny Pokémon…<br>Blijf vangen! ✨</p>';
-  }
-
-  $('grid').onclick = e => { 
-    const c = e.target.closest('.card[data-id]'); 
-    if (!c) return; 
-    const id = c.dataset.id, sh = tab === 'shiny', d = (sh ? S.shinies : S.caught)[id];
-    if (pickMode) {
-      S.buddy = { id: +id, shiny: sh }; save(); renderBuddy(); pickMode = false;
-      $('dex').classList.remove('on'); say(d.name, 'en-US'); return;
-    }
-    const dimg = $('dimg');
-    dimg.onerror = () => { dimg.onerror = null; dimg.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${sh ? 'shiny/' : ''}${id}.png`; };
-    dimg.src = ART + (sh ? 'shiny/' : '') + id + '.png'; 
-    $('dname').textContent = d.name; 
-    const bs = d.b ? Object.entries(d.b) : (d.ball ? [[d.ball, d.n]] : []);
-    $('dinfo').innerHTML = `Gevangen: ${d.n}×${sh ? '  ✨' : ''}` + (bs.length ? '<div style="margin-top:4px;font-size:15px;line-height:1.6">' + bs.map(([k, n]) => `<span class="ball ball-${k}" style="--s:18px;vertical-align:middle;border-width:2px"></span> ${BALLNAME[k] || k} ×${n}`).join('<br>') + '</div>' : '');
-    $('say').onclick = () => say(d.name, 'en-US');
-    const isBuddy = () => !!S.buddy && S.buddy.id === +id && !!S.buddy.shiny === sh;
-    const bt = () => { $('setbuddy').textContent = isBuddy() ? '⭐ Je buddy ✔' : '⭐ Maak buddy'; };
-    bt();
-    $('setbuddy').onclick = () => { S.buddy = isBuddy() ? null : { id: +id, shiny: sh }; save(); renderBuddy(); bt(); };
-    $('detail').classList.add('on'); 
-    say(d.name, 'en-US'); 
-  };
-
-  document.querySelectorAll('.tabs .pill').forEach(b => b.onclick = () => { 
-    tab = b.dataset.t; 
-    document.querySelectorAll('.tabs .pill').forEach(x => x.classList.toggle('on', x === b)); 
-    renderDex(); 
-  });
-
-  $('dexbtn').onclick = () => { pickMode = false; renderDex(); $('dex').classList.add('on'); };
-  $('dexclose').onclick = () => { pickMode = false; $('dex').classList.remove('on'); };
-  $('dclose').onclick = () => $('detail').classList.remove('on');
-
-  const gear = $('gear'); 
-  let hold = null;
-  const startHold = (e) => { 
-    if (e.cancelable) e.preventDefault();
-    hold = setTimeout(() => { fillParentMenu(); $('parent').classList.add('on'); }, 1500); 
-  };
-  const stopHold = () => clearTimeout(hold);
-
-  ['touchstart', 'mousedown', 'pointerdown'].forEach(ev => gear.addEventListener(ev, startHold, { passive: false }));
-  ['touchend', 'touchcancel', 'mouseup', 'mouseleave', 'pointerup', 'pointercancel'].forEach(ev => gear.addEventListener(ev, stopHold));
-
-  function fillParentMenu() { 
-    $('p-sound').textContent = S.sound ? 'Aan' : 'Uit'; 
-    $('p-voice').textContent = S.voice ? 'Aan' : 'Uit'; 
-    $('p-music').textContent = S.music ? 'Aan' : 'Uit';
-    $('p-size').value = S.size; 
-  }
-
-  $('pclose').onclick = () => $('parent').classList.remove('on');
-  $('p-sound').onclick = () => { S.sound = !S.sound; save(); fillParentMenu(); }; 
-  $('p-voice').onclick = () => { S.voice = !S.voice; save(); fillParentMenu(); };
-  $('p-music').onclick = () => { S.music = !S.music; save(); fillParentMenu(); S.music ? musicStart() : musicStop(); };
-  $('p-size').onchange = e => { S.size = +e.target.value; save(); $('count').textContent = total(); spawn(); };
-  
-  $('p-export').onclick = async () => { 
-    const code = btoa(unescape(encodeURIComponent(JSON.stringify(S))));
-    try { 
-      await navigator.clipboard.writeText(code); 
-      alert('Back-upcode gekopieerd naar klembord!'); 
-    } catch { 
-      prompt('Kopieer deze back-upcode:', code); 
-    } 
-  };
-
-  $('p-import').onclick = () => { 
-    const c = prompt('Plak de back-upcode:'); 
-    if (!c) return;
-    try { 
-      S = migrate({ ...def, ...JSON.parse(decodeURIComponent(escape(atob(c.trim())))) }); 
-      save(); 
-      fillParentMenu(); 
-      $('count').textContent = total(); 
-      renderBuddy(); setPose('idle'); alert('Voortgang hersteld!'); 
-      spawn(); 
-    } catch { 
-      alert('Die code klopt niet.'); 
-    } 
-  };
-
-  $('p-reset').onclick = () => { 
-    if (confirm('Alle gevangen Pokémon wissen?') && confirm('Zeker weten? Dit kan niet ongedaan gemaakt worden.')) { 
-      S = fresh(); 
-      save(); 
-      $('count').textContent = 0; renderBuddy(); 
-      spawn(); 
-    } 
-  };
-
-  $('throw').onclick = throwBall;
-  $('next').onclick = () => {
-    if (busy && cur) return;
-    if (!cur) { spawn(); return; }
-    if ((S.skips || 0) >= MAX_SKIPS) { $('msg').textContent = 'Je hebt 3 keer gezocht. Probeer deze Pokémon te vangen! 💪'; return; }
-    S.skips = (S.skips || 0) + 1; save(); updateSkipUI();
-    try { speechSynthesis.cancel(); } catch {}
-    spawn();
-  };
-
-  $('count').textContent = total();
-  renderBuddy();
-  spawn();
-</script>
-</body>
-</html>
