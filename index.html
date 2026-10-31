@@ -11,6 +11,15 @@
 <title>Pokémon vangen</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='30' fill='%23e53935' stroke='%23222' stroke-width='4'/><rect y='30' width='64' height='5' fill='%23222'/><circle cx='32' cy='32' r='9' fill='%23fff' stroke='%23222' stroke-width='4'/></svg>">
 <style>
+  :root {
+    --sky: #7dd3fc;
+    --ground: #86efac;
+    --primary: #1e3a8a;
+    --accent: #fbbf24;
+    --shadow-soft: 0 4px 12px rgba(0,0,0,0.12);
+    --shadow-card: 0 6px 16px rgba(0,0,0,0.15);
+  }
+
   * { 
     box-sizing: border-box; 
     -webkit-tap-highlight-color: transparent; 
@@ -19,146 +28,238 @@
     -webkit-user-select: none;
     -webkit-touch-callout: none;
   }
+
   html, body { 
     margin: 0; 
     height: 100%; 
     height: 100dvh;
     width: 100%;
-    font-family: 'Trebuchet MS', 'Comic Sans MS', system-ui, -apple-system, sans-serif; 
+    font-family: system-ui, -apple-system, 'SF Pro Display', 'Trebuchet MS', Roboto, sans-serif; 
     overflow: hidden; 
     position: fixed;
   }
+
   body { 
-    background: linear-gradient(var(--sky, #7dd3fc) 0 52%, var(--ground, #86efac) 52%); 
+    background: linear-gradient(var(--sky) 0 52%, var(--ground) 52%); 
     padding-top: env(safe-area-inset-top);
     padding-right: env(safe-area-inset-right);
     padding-bottom: env(safe-area-inset-bottom);
     padding-left: env(safe-area-inset-left);
+    transition: background 0.5s ease;
   }
+
   #app { height: 100%; display: flex; flex-direction: column; position: relative; z-index: 1; }
-  #deco { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-  #deco span { position: absolute; opacity: .5; animation-timing-function: linear; animation-iteration-count: infinite; }
-  #deco .up { top: 100%; animation-name: drift-up; } #deco .down { top: -12%; animation-name: drift-down; }
-  @keyframes drift-up { to { transform: translateY(-125vh) rotate(25deg); } }
-  @keyframes drift-down { to { transform: translateY(125vh) rotate(-25deg); } }
   
-  .top { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; z-index: 10; width: 100%; flex: none; }
+  #deco { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  #deco span { position: absolute; opacity: .45; animation-timing-function: linear; animation-iteration-count: infinite; will-change: transform; }
+  #deco .up { top: 100%; animation-name: drift-up; } 
+  #deco .down { top: -12%; animation-name: drift-down; }
+  
+  @keyframes drift-up { to { transform: translate3d(0, -125vh, 0) rotate(25deg); } }
+  @keyframes drift-down { to { transform: translate3d(0, 125vh, 0) rotate(-25deg); } }
+  
+  .top { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 10px 14px; 
+    z-index: 10; 
+    width: 100%; 
+    flex: none; 
+  }
+
   .pill { 
     border: 0; 
     border-radius: 999px; 
-    padding: 8px 14px; 
+    padding: 10px 16px; 
     font-size: 16px; 
-    font-weight: bold; 
-    background: #fff; 
-    color: #1e3a8a; 
-    box-shadow: 0 3px 0 rgba(0,0,0,.2); 
+    font-weight: 700; 
+    background: rgba(255, 255, 255, 0.92); 
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: var(--primary); 
+    box-shadow: var(--shadow-soft); 
     cursor: pointer;
+    transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 42px;
   }
-  .pill:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.2); }
-  #streak { font-size: 15px; padding: 6px 10px; }
-  #streak.dim { opacity: .45; }
-  #next.dim { opacity: .45; }
-  #gear { font-size: 18px; padding: 8px 10px; opacity: .8; }
+
+  .pill:active { transform: scale(0.96); }
+  #streak { font-size: 15px; padding: 8px 12px; }
+  #streak.dim, #next.dim { opacity: 0.5; }
+  #gear { font-size: 18px; padding: 8px 12px; opacity: 0.85; }
 
   .scene { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: space-between; min-height: 0; padding-bottom: 4px; }
   
   .monwrap { flex: 1; min-height: 0; width: 100%; position: relative; display: flex; align-items: center; justify-content: center; padding: 0 12px; }
-  #mon { width: min(48vw, 24vh); height: min(48vw, 24vh); max-height: 100%; object-fit: contain; animation: float 2.4s ease-in-out infinite; filter: drop-shadow(0 10px 5px rgba(0,0,0,.25)); transition: opacity .3s, transform .4s ease-in; }
-  #mon.flee { transform: translateX(120vw) scale(0.6); opacity: 0 !important; }
-  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  #mon { 
+    width: min(50vw, 25vh); 
+    height: min(50vw, 25vh); 
+    max-height: 100%; 
+    object-fit: contain; 
+    animation: float 2.6s ease-in-out infinite; 
+    filter: drop-shadow(0 12px 8px rgba(0,0,0,0.22)); 
+    transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); 
+    will-change: transform, opacity;
+  }
+  #mon.flee { transform: translate3d(120vw, 0, 0) scale(0.5); opacity: 0 !important; }
+  @keyframes float { 0%, 100% { transform: translate3d(0, 0, 0); } 50% { transform: translate3d(0, -10px, 0); } }
   
   #namerow { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 0 56px 0 8px; z-index: 4; flex: none; }
-  #name { font-size: clamp(18px, 5.5vw, 24px); font-weight: bold; color: #1e3a8a; text-shadow: 0 2px 0 #fff; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  #msg { font-size: clamp(14px, 4vw, 16px); font-weight: bold; color: #7c2d12; background: rgba(255,255,255,.9); border-radius: 14px; padding: 5px 12px; text-align: center; width: min(88vw, 320px); margin: 0 auto; z-index: 4; box-shadow: 0 2px 5px rgba(0,0,0,.1); flex: none; }
+  #name { 
+    font-size: clamp(19px, 5.8vw, 26px); 
+    font-weight: 800; 
+    color: var(--primary); 
+    text-shadow: 0 2px 4px rgba(255,255,255,0.8); 
+    text-align: center; 
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+  }
+  
+  #msg { 
+    font-size: clamp(14px, 4.2vw, 16px); 
+    font-weight: 700; 
+    color: #7c2d12; 
+    background: rgba(255, 255, 255, 0.92); 
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 16px; 
+    padding: 8px 16px; 
+    text-align: center; 
+    width: min(88vw, 340px); 
+    margin: 0 auto; 
+    z-index: 4; 
+    box-shadow: var(--shadow-soft); 
+    flex: none; 
+    transition: all 0.2s ease;
+  }
   
   /* Pokéball styling */
-  .ball { width: var(--s, 60px); height: var(--s, 60px); border-radius: 50%; border: 3.5px solid #222; position: relative; flex: none; display: inline-block; }
-  .ball::after { content: ''; position: absolute; left: 50%; top: 50%; width: 30%; height: 30%; transform: translate(-50%,-50%); border-radius: 50%; background: #fff; border: 2.5px solid #222; }
+  .ball { width: var(--s, 60px); height: var(--s, 60px); border-radius: 50%; border: 3.5px solid #111; position: relative; flex: none; display: inline-block; box-shadow: inset -3px -3px 6px rgba(0,0,0,0.25); }
+  .ball::after { content: ''; position: absolute; left: 50%; top: 50%; width: 30%; height: 30%; transform: translate(-50%,-50%); border-radius: 50%; background: #fff; border: 2.5px solid #111; box-shadow: 0 0 4px rgba(0,0,0,0.15); }
   
-  .ball-poke { background: linear-gradient(#e53935 0 44%, #222 44% 56%, #fff 56%); }
-  .ball-great { background: linear-gradient(#2563eb 0 44%, #222 44% 56%, #fff 56%); }
+  .ball-poke { background: linear-gradient(#ef4444 0 44%, #111 44% 56%, #fff 56%); }
+  .ball-great { background: linear-gradient(#2563eb 0 44%, #111 44% 56%, #fff 56%); }
   .ball-great::before { content: ''; position: absolute; top: 10%; left: 15%; width: 70%; height: 25%; background: #ef4444; border-radius: 8px; }
-  .ball-ultra { background: linear-gradient(#eab308 0 44%, #222 44% 56%, #fff 56%); }
-  .ball-ultra::before { content: ''; position: absolute; top: 8%; left: 20%; width: 60%; height: 28%; background: #222; border-radius: 4px; }
-  .ball-mega { background: linear-gradient(#ec4899 0 44%, #222 44% 56%, #fff 56%); }
+  .ball-ultra { background: linear-gradient(#eab308 0 44%, #111 44% 56%, #fff 56%); }
+  .ball-ultra::before { content: ''; position: absolute; top: 8%; left: 20%; width: 60%; height: 28%; background: #111; border-radius: 4px; }
+  .ball-mega { background: linear-gradient(#ec4899 0 44%, #111 44% 56%, #fff 56%); }
   .ball-mega::before { content: ''; position: absolute; top: 8%; left: 25%; width: 50%; height: 26%; background: #fce7f3; border-radius: 50%; }
-  #reset-timer { align-self: flex-start; margin: 0 10px 6px; font-size: 12px; font-weight: bold; color: #1e3a8a; background: rgba(255,255,255,.7); border-radius: 99px; padding: 2px 10px; }
-  .ball-master { background: linear-gradient(#a855f7 0 44%, #222 44% 56%, #fff 56%); }
-  .ball-master::before { content: 'M'; position: absolute; top: 2%; left: 50%; transform: translateX(-50%); color: #fff; font-weight: 900; font-size: 12px; font-family: sans-serif; z-index: 2; }
+  #reset-timer { align-self: flex-start; margin: 0 10px 6px; font-size: 12px; font-weight: 700; color: var(--primary); background: rgba(255,255,255,.75); border-radius: 99px; padding: 4px 12px; }
+  .ball-master { background: linear-gradient(#a855f7 0 44%, #111 44% 56%, #fff 56%); }
+  .ball-master::before { content: 'M'; position: absolute; top: 2%; left: 50%; transform: translateX(-50%); color: #fff; font-weight: 900; font-size: 12px; font-family: sans-serif; z-index: 2; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
 
-  #thrown { --s: 55px; position: absolute; left: 50%; top: 50%; margin: -28px 0 0 -28px; display: none; z-index: 5; }
-  .fly { display: block !important; animation: fly .8s ease-out forwards; }
-  @keyframes fly { 0% { transform: translate(-20vw, 28vh) scale(.5) rotate(0); } 60% { transform: translate(-4vw, -5vh) scale(1.1) rotate(540deg); } 100% { transform: translate(0, 0) scale(.9) rotate(720deg); } }
+  #thrown { --s: 56px; position: absolute; left: 50%; top: 50%; margin: -28px 0 0 -28px; display: none; z-index: 5; }
+  .fly { display: block !important; animation: fly 0.85s cubic-bezier(0.2, 0.8, 0.25, 1) forwards; }
+  @keyframes fly { 0% { transform: translate3d(-20vw, 28vh, 0) scale(.5) rotate(0); } 65% { transform: translate3d(-4vw, -5vh, 0) scale(1.1) rotate(540deg); } 100% { transform: translate3d(0, 0, 0) scale(.9) rotate(720deg); } }
   
   .fly-master { 
     display: block !important; 
-    animation: fly-master .9s cubic-bezier(0.25, 1, 0.5, 1) forwards !important; 
-    filter: drop-shadow(0 0 14px #c084fc) drop-shadow(0 0 26px #e879f9) !important; 
+    animation: fly-master 0.95s cubic-bezier(0.15, 0.85, 0.35, 1.2) forwards !important; 
+    filter: drop-shadow(0 0 16px #c084fc) drop-shadow(0 0 28px #e879f9) !important; 
   }
   @keyframes fly-master { 
-    0% { transform: translate(-20vw, 28vh) scale(.5) rotate(0); } 
-    50% { transform: translate(-4vw, -9vh) scale(1.3) rotate(720deg); } 
-    100% { transform: translate(0, 0) scale(1.05) rotate(1080deg); } 
+    0% { transform: translate3d(-20vw, 28vh, 0) scale(.5) rotate(0); } 
+    55% { transform: translate3d(-4vw, -9vh, 0) scale(1.35) rotate(720deg); } 
+    100% { transform: translate3d(0, 0, 0) scale(1.05) rotate(1080deg); } 
   }
 
-  .wig { animation: wig .6s ease-in-out; }
-  @keyframes wig { 0%,100% { transform: rotate(0); } 20% { transform: rotate(-30deg); } 45% { transform: rotate(0); } 65% { transform: rotate(30deg); } 85% { transform: rotate(0); } }
+  .wig { animation: wig 0.6s ease-in-out; }
+  @keyframes wig { 0%,100% { transform: rotate(0); } 20% { transform: rotate(-28deg); } 45% { transform: rotate(0); } 65% { transform: rotate(28deg); } 85% { transform: rotate(0); } }
   
-  .bottom { padding: 4px 12px env(safe-area-inset-bottom, 12px); display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; z-index: 10; flex: none; }
+  .bottom { padding: 4px 12px env(safe-area-inset-bottom, 14px); display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; z-index: 10; flex: none; }
   
-  /* Bal-kiezer aan de rechterkant */
-  .side { position: absolute; right: 8px; top: 45%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 6; }
-  #gift { font-size: 22px; padding: 4px 8px; animation: pulse 1.6s ease-in-out infinite; }
+  .side { position: absolute; right: 10px; top: 45%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 6; }
+  #gift { font-size: 22px; padding: 6px 10px; animation: pulse 1.6s ease-in-out infinite; }
   @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
-  .ball-selector { display: flex; flex-direction: column; align-items: center; gap: 8px; background: rgba(255,255,255,.92); padding: 6px 3px 8px; border-radius: 20px; box-shadow: 0 3px 5px rgba(0,0,0,.12); }
-  .ball-opt { border: 2.5px solid transparent; border-radius: 50%; padding: 2px; cursor: pointer; transition: transform .15s, border-color .15s; position: relative; }
-  .ball-opt.active { border-color: #fbbf24; transform: scale(1.1); }
-  .ball-opt.depleted { opacity: 0.4; filter: grayscale(100%); }
-  .ball-opt .ball { --s: 30px; }
-  .ball-badge { position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); background: #1e3a8a; color: #fff; font-size: 8.5px; font-weight: bold; border-radius: 99px; padding: 1px 3px; white-space: nowrap; }
+  
+  .ball-selector { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    gap: 8px; 
+    background: rgba(255,255,255,.88); 
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 8px 4px 10px; 
+    border-radius: 22px; 
+    box-shadow: var(--shadow-soft); 
+  }
+  .ball-opt { border: 2.5px solid transparent; border-radius: 50%; padding: 2px; cursor: pointer; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.15s ease; position: relative; }
+  .ball-opt.active { border-color: #fbbf24; transform: scale(1.12); }
+  .ball-opt.depleted { opacity: 0.35; filter: grayscale(100%); }
+  .ball-opt .ball { --s: 32px; }
+  .ball-badge { position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #fff; font-size: 9px; font-weight: 800; border-radius: 99px; padding: 1px 4px; white-space: nowrap; }
 
-  #throw { --s: 26px; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; max-width: 320px; border: 0; border-radius: 999px; padding: 10px;
-    font-size: 20px; font-weight: bold; color: #fff; background: #ef4444; box-shadow: 0 4px 0 #991b1b; cursor: pointer; }
-  #throw:active { transform: translateY(2px); box-shadow: 0 1px 0 #991b1b; }
-  #throw:disabled { opacity: .5; pointer-events: none; }
-  #next { font-size: 15px; padding: 6px 14px; }
+  #throw { 
+    --s: 28px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 10px; 
+    width: 100%; 
+    max-width: 320px; 
+    border: 0; 
+    border-radius: 999px; 
+    padding: 12px;
+    font-size: 21px; 
+    font-weight: 800; 
+    color: #fff; 
+    background: linear-gradient(135deg, #ef4444, #dc2626); 
+    box-shadow: 0 4px 14px rgba(239,68,68,0.4); 
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+    min-height: 52px;
+  }
+  #throw:active { transform: scale(0.97); box-shadow: 0 2px 6px rgba(239,68,68,0.3); }
+  #throw:disabled { opacity: 0.5; pointer-events: none; }
+  #next { font-size: 15px; padding: 8px 16px; min-height: 40px; }
   
   .star { position: fixed; top: -40px; font-size: 24px; z-index: 50; pointer-events: none; animation: fall 2.2s ease-in forwards; }
-  @keyframes fall { to { transform: translateY(110vh) rotate(360deg); opacity: .8; } }
+  @keyframes fall { to { transform: translate3d(0, 110vh, 0) rotate(360deg); opacity: 0.8; } }
 
-  /* Pokédex & Menu Layer */
   .layer { position: fixed; inset: 0; background: #fef9c3; z-index: 20; display: none; flex-direction: column; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
   .layer.on { display: flex; }
-  .bar { display: flex; align-items: center; gap: 8px; padding: 10px 12px; flex-wrap: wrap; }
-  .bar h2 { margin: 0; flex: 1; color: #1e3a8a; font-size: 20px; }
-  .tabs { display: flex; gap: 6px; padding: 0 12px 6px; }
-  .tabs .pill { font-size: 14px; padding: 6px 10px; } .tabs .on { background: #fbbf24; }
-  #prog { height: 10px; margin: 0 12px 6px; background: #fde68a; border-radius: 99px; overflow: hidden; }
-  #prog i { display: block; height: 100%; background: #22c55e; width: 0; transition: width .5s; }
-  #grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 0 10px 16px; align-content: start; -webkit-overflow-scrolling: touch; }
-  .card { background: #fff; border-radius: 12px; padding: 4px; text-align: center; box-shadow: 0 2px 0 rgba(0,0,0,.1); font-size: 11px; font-weight: bold; color: #1e3a8a; cursor: pointer; }
+  .bar { display: flex; align-items: center; gap: 8px; padding: 12px 14px; flex-wrap: wrap; }
+  .bar h2 { margin: 0; flex: 1; color: var(--primary); font-size: 22px; font-weight: 800; }
+  .tabs { display: flex; gap: 6px; padding: 0 12px 8px; }
+  .tabs .pill { font-size: 14px; padding: 6px 12px; min-height: 36px; } 
+  .tabs .on { background: #fbbf24; }
+  #prog { height: 10px; margin: 0 12px 8px; background: #fde68a; border-radius: 99px; overflow: hidden; }
+  #prog i { display: block; height: 100%; background: #22c55e; width: 0; transition: width 0.4s ease; }
+  #grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 0 12px 20px; align-content: start; -webkit-overflow-scrolling: touch; }
+  .card { background: #fff; border-radius: 14px; padding: 6px; text-align: center; box-shadow: var(--shadow-soft); font-size: 11px; font-weight: 700; color: var(--primary); cursor: pointer; transition: transform 0.15s ease; }
+  .card:active { transform: scale(0.95); }
   .card img { width: 100%; aspect-ratio: 1; object-fit: contain; display: block; }
-  .card.no img { filter: brightness(0); opacity: .15; } .card.no { color: #9ca3af; }
-  .big { align-items: center; justify-content: center; text-align: center; background: rgba(0,0,0,.6); }
-  .big .box { background: #fff; border-radius: 20px; padding: 16px; width: min(86vw, 320px); }
-  .big img { width: 60%; } .big h3 { font-size: 24px; margin: 4px 0; color: #1e3a8a; }
-  .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 12px; background: #fff; margin: 4px 10px; border-radius: 10px; font-size: 15px; }
-  .row button { font-size: 14px; padding: 5px 10px; }
+  .card.no img { filter: brightness(0); opacity: 0.15; } 
+  .card.no { color: #9ca3af; }
+  
+  .big { align-items: center; justify-content: center; text-align: center; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+  .big .box { background: #fff; border-radius: 24px; padding: 20px; width: min(86vw, 330px); box-shadow: var(--shadow-card); }
+  .big img { width: 60%; } 
+  .big h3 { font-size: 24px; margin: 6px 0; color: var(--primary); font-weight: 800; }
+  
+  .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 14px; background: #fff; margin: 4px 10px; border-radius: 12px; font-size: 15px; font-weight: 600; }
+  .row button { font-size: 14px; padding: 6px 12px; min-height: 36px; }
 
-  /* Trainer & Buddy Layout */
   .trainer { position: relative; aspect-ratio: 2 / 3; pointer-events: none; }
   .trainer img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
   .trainer .tfb { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 48px; }
-  .stage { display: flex; align-items: flex-end; gap: -2px; width: 100%; padding: 0 0 0 6px; flex: none; }
-  #app .trainer { position: relative; flex: none; height: min(22vh, 34vw * 1.5); filter: drop-shadow(0 4px 3px rgba(0,0,0,.25)); transform-origin: 50% 100%; }
+  .stage { display: flex; align-items: flex-end; gap: -2px; width: 100%; padding: 0 0 0 8px; flex: none; }
+  #app .trainer { position: relative; flex: none; height: min(22vh, 34vw * 1.5); filter: drop-shadow(0 4px 3px rgba(0,0,0,.22)); transform-origin: 50% 100%; }
   
-  #buddy { height: min(9vh, 18vw); width: auto; flex: none; margin-bottom: 2px; margin-left: -4px; object-fit: contain; filter: drop-shadow(0 2px 2px rgba(0,0,0,.25)); animation: bob 1.8s ease-in-out infinite; }
-  #buddy.hop { animation: hop .5s ease-in-out 3; }
+  #buddy { height: min(9.5vh, 18vw); width: auto; flex: none; margin-bottom: 2px; margin-left: -4px; object-fit: contain; filter: drop-shadow(0 3px 2px rgba(0,0,0,.22)); animation: bob 1.8s ease-in-out infinite; }
+  #buddy.hop { animation: hop 0.5s ease-in-out 3; }
   
   #dexmark { flex: none; display: flex; align-items: center; }
   #dexmark .ball { --s: 24px; border-width: 2px; }
   #dexmark .ball::after { border-width: 2px; }
-  #dexmark .new { background: #f97316; color: #fff; font-size: 11px; font-weight: bold; border-radius: 99px; padding: 2px 6px; box-shadow: 0 2px 0 rgba(0,0,0,.2); }
+  #dexmark .new { background: #f97316; color: #fff; font-size: 11px; font-weight: 800; border-radius: 99px; padding: 2px 8px; box-shadow: 0 2px 0 rgba(0,0,0,.15); }
   .card { position: relative; }
   .card .cb { --s: 18px; position: absolute; top: 4px; left: 4px; border-width: 2px; }
   .card .cb::after { border-width: 1.5px; }
@@ -173,15 +274,15 @@
   .spk { position: absolute; font-size: 20px; pointer-events: none; z-index: 3; animation: twinkle 1.3s ease-in-out infinite; }
   .monwrap.quiet .spk { display: none; }
   @keyframes twinkle { 0%,100% { opacity: 0; transform: scale(.3) rotate(0); } 50% { opacity: 1; transform: scale(1.15) rotate(35deg); } }
-  @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+  @keyframes bob { 0%,100% { transform: translate3d(0,0,0); } 50% { transform: translate3d(0, -3px, 0); } }
   
   .trainer[data-pose="idle"] { animation: breathe 3s ease-in-out infinite; }
   .trainer[data-pose="throw"] { animation: lunge .5s ease-out; }
   .trainer[data-pose="happy"] { animation: hop .5s ease-in-out 3; }
   .trainer[data-pose="sad"] { animation: sway 1s ease-in-out infinite; }
   @keyframes breathe { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(1.015); } }
-  @keyframes lunge { 0% { transform: translateX(0); } 40% { transform: translateX(10px) rotate(3deg); } 100% { transform: translateX(0); } }
-  @keyframes hop { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+  @keyframes lunge { 0% { transform: translate3d(0,0,0); } 40% { transform: translate3d(10px,0,0) rotate(3deg); } 100% { transform: translate3d(0,0,0); } }
+  @keyframes hop { 0%,100% { transform: translate3d(0,0,0); } 50% { transform: translate3d(0, -12px, 0); } }
   @keyframes sway { 0%,100% { transform: rotate(-1.5deg); } 50% { transform: rotate(1.5deg); } }
   
   #dress { background: #e0f2fe; }
@@ -200,19 +301,18 @@
     filter: drop-shadow(0 2px 2px rgba(0,0,0,.2));
     animation: toy-float 2s ease-in-out infinite;
   }
-  @keyframes toy-float { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-2px) rotate(5deg); } }
+  @keyframes toy-float { 0%,100% { transform: translate3d(0,0,0) rotate(0); } 50% { transform: translate3d(0,-2px,0) rotate(5deg); } }
 
   #dopts { flex: 1; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-content: flex-start; padding: 4px 8px 16px; }
   #dopts .pill.on { background: #fbbf24; }
-  #dopts .sw { display: inline-block; width: 18px; height: 18px; border-radius: 50%; border: 2px solid #1e3a8a; vertical-align: middle; margin-right: 5px; }
+  #dopts .sw { display: inline-block; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--primary); vertical-align: middle; margin-right: 5px; }
 
   @keyframes rainbow-anim {
     0% { filter: grayscale(1) sepia(1) hue-rotate(0deg) saturate(3) brightness(1.2); }
     50% { filter: grayscale(1) sepia(1) hue-rotate(180deg) saturate(3) brightness(1.2); }
     100% { filter: grayscale(1) sepia(1) hue-rotate(360deg) saturate(3) brightness(1.2); }
   }
-  .rainbow-outfit { animation: rainbow-anim 4s linear infinite; }
-  .rainbow-hair { animation: rainbow-anim 4s linear infinite; }
+  .rainbow-outfit, .rainbow-hair { animation: rainbow-anim 4s linear infinite; }
 </style>
 </head>
 <body>
@@ -258,7 +358,7 @@
 <div class="layer" id="dex">
   <div class="bar"><h2>Mijn Pokédex <span id="dcount"></span></h2><button class="pill" id="dexclose">✖</button></div>
   <div id="reset-timer"></div>
-  <div id="pickhint" style="display:none;margin:0 10px 4px;padding:5px 10px;border-radius:10px;background:#fbbf24;color:#1e3a8a;font-weight:bold;font-size:14px;text-align:center">⭐ Tik op een Pokémon om je buddy te kiezen</div>
+  <div id="pickhint" style="display:none;margin:0 10px 4px;padding:6px 10px;border-radius:10px;background:#fbbf24;color:#1e3a8a;font-weight:bold;font-size:14px;text-align:center">⭐ Tik op een Pokémon om je buddy te kiezen</div>
   <div id="prog"><i></i></div>
   <div class="tabs"><button class="pill on" data-t="all">Alle</button><button class="pill" data-t="shiny">✨ Shiny</button></div>
   <div id="grid"></div>
@@ -273,7 +373,6 @@
   <button class="pill" id="r-ultra" style="margin:4px"><span class="ball ball-ultra" style="--s:26px;vertical-align:middle"></span> 5 Ultra Balls</button>
 </div></div>
 
-<!-- Shiny Reward Scherm -->
 <div class="layer big" id="shiny-reward"><div class="box">
   <h3>✨ 10 Shiny Pokémon! ✨</h3><p style="font-size:15px;margin:3px 0 8px">Kies jouw fantastische beloning:</p>
   <button class="pill" id="sr-balls" style="margin:4px;width:100%">🎁 10 Super Balls</button><br>
@@ -580,10 +679,11 @@
         alt: p.sprites.front_shiny || p.sprites.front_default
       };
     } catch {
-      cur = { id: 25, shiny: true, name: 'Pikachu', legendary: false, rate: 120, rare: false, type: 'electric', img: ART + 'shiny/25.png' };
+      cur = { id: 25, shiny: true, name: 'Pikachu', legendary: false, rate: 120, rare: false, type: 'electric', img: ART + 'shiny/25.png', alt: ART + 'shiny/25.png' };
     }
     misses = 0;
     setBackground(cur.type);
+    mon.onerror = () => { mon.onerror = null; mon.src = cur.alt; };
     mon.src = cur.img;
     mon.onload = () => { mon.style.opacity = 1; };
     $('name').textContent = '✨ ' + cur.name;
@@ -606,6 +706,7 @@
     dragon: { sky: '#818cf8', ground: '#3730a3', e: '🐉' }, dark: { sky: '#4b5563', ground: '#111827', e: '🌙' },
     steel: { sky: '#cbd5e1', ground: '#64748b', e: '⚙️' }, fairy: { sky: '#fbcfe8', ground: '#f472b6', e: '🌸', down: 1 }
   };
+
   function setBackground(type) {
     const t = TYPES[type] || TYPES.normal;
     document.body.style.setProperty('--sky', t.sky); document.body.style.setProperty('--ground', t.ground);
@@ -684,7 +785,7 @@
     const L = (name, style = '', extra = '') => `<img src="trainer/${name}.png" alt="" style="${style}" onerror="this.style.display='none'" ${extra}>`;
     return '<span class="tfb">🧒</span>'
       + L(`hair-${t.hair}-back`, hairStyle, hairClass)
-      + L(`base-${pose}`, '', `onload="this.parentNode.querySelector('.tfb').style.display='none'"`)
+      + L(`base-${pose}`, '', `onload="const p=this.parentNode.querySelector('.tfb');if(p)p.style.display='none'"`)
       + L(`outfit-${t.outfit}-${pose}`, outfitStyle, outfitClass)
       + L(`hair-${t.hair}-front`, hairStyle, hairClass);
   }
@@ -694,7 +795,14 @@
     renderToy(); updateNames();
     if (!S.buddy) { w.style.display = 'none'; nb.style.display = ''; return; }
     nb.style.display = 'none'; w.style.display = '';
-    b.onerror = () => { w.style.display = 'none'; nb.style.display = ''; };
+    b.onerror = () => {
+      // Robust Image Fallback
+      if (b.src.includes('official-artwork')) {
+        b.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${S.buddy.shiny ? 'shiny/' : ''}${S.buddy.id}.png`;
+      } else {
+        w.style.display = 'none'; nb.style.display = '';
+      }
+    };
     b.src = ART + (S.buddy.shiny ? 'shiny/' : '') + S.buddy.id + '.png';
   }
 
@@ -784,7 +892,7 @@
         rare: !!(sp.is_legendary || sp.is_mythical) || (sp.capture_rate ?? 255) <= 45,
         type: p.types?.[0]?.type?.name || 'normal',
         img: ART + (shiny ? 'shiny/' : '') + id + '.png', 
-        alt: p.sprites.other?.['official-artwork']?.[shiny ? 'front_shiny' : 'front_default'] || p.sprites.front_default 
+        alt: p.sprites.other?.['official-artwork']?.[shiny ? 'front_shiny' : 'front_default'] || p.sprites.front_default || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${shiny ? 'shiny/' : ''}${id}.png`
       };
     } catch { 
       cur = null; 
@@ -973,8 +1081,10 @@
     let h = '';
     for (const id of ids) {
       const c = shinyTab ? S.shinies[id] : S.caught[id];
-      h += c ? `<div class="card" data-id="${id}">${c.ball ? `<span class="ball ball-${c.ball} cb" title="${BALLNAME[c.ball]}"></span>` : ''}<img loading="lazy" src="${ART}${shinyTab ? 'shiny/' : ''}${id}.png" alt=""><div>${shinyTab ? '✨ ' : ''}${c.name}</div></div>`
-             : `<div class="card no"><img loading="lazy" src="${ART}${id}.png" alt=""><div>${id}</div></div>`;
+      const imgSrc = `${ART}${shinyTab ? 'shiny/' : ''}${id}.png`;
+      const fallbackSrc = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${shinyTab ? 'shiny/' : ''}${id}.png`;
+      h += c ? `<div class="card" data-id="${id}">${c.ball ? `<span class="ball ball-${c.ball} cb" title="${BALLNAME[c.ball]}"></span>` : ''}<img loading="lazy" src="${imgSrc}" onerror="this.onerror=null;this.src='${fallbackSrc}'" alt=""><div>${shinyTab ? '✨ ' : ''}${c.name}</div></div>`
+             : `<div class="card no"><img loading="lazy" src="${ART}${id}.png" onerror="this.onerror=null;this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png'" alt=""><div>${id}</div></div>`;
     }
     $('grid').innerHTML = h || '<p style="grid-column:1/-1;text-align:center;font-size:16px;color:#6b7280">Nog geen shiny Pokémon…<br>Blijf vangen! ✨</p>';
   }
@@ -987,7 +1097,9 @@
       S.buddy = { id: +id, shiny: sh }; save(); renderBuddy(); pickMode = false;
       $('dex').classList.remove('on'); say(d.name, 'en-US'); return;
     }
-    $('dimg').src = ART + (sh ? 'shiny/' : '') + id + '.png'; 
+    const dimg = $('dimg');
+    dimg.onerror = () => { dimg.onerror = null; dimg.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${sh ? 'shiny/' : ''}${id}.png`; };
+    dimg.src = ART + (sh ? 'shiny/' : '') + id + '.png'; 
     $('dname').textContent = d.name; 
     const bs = d.b ? Object.entries(d.b) : (d.ball ? [[d.ball, d.n]] : []);
     $('dinfo').innerHTML = `Gevangen: ${d.n}×${sh ? '  ✨' : ''}` + (bs.length ? '<div style="margin-top:4px;font-size:15px;line-height:1.6">' + bs.map(([k, n]) => `<span class="ball ball-${k}" style="--s:18px;vertical-align:middle;border-width:2px"></span> ${BALLNAME[k] || k} ×${n}`).join('<br>') + '</div>' : '');
