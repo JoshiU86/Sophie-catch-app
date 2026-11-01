@@ -249,6 +249,7 @@
   /* Battle Minigame Styling */
   .battle-btn { width: 100%; margin: 6px 0; font-size: 16px; padding: 12px; background: #fff; border: 2.5px solid #cbd5e1; border-radius: 14px; color: var(--primary); font-weight: 700; cursor: pointer; transition: all 0.1s ease; }
   .battle-btn:active { background: #f1f5f9; transform: scale(0.98); }
+  .battle-btn:disabled { opacity: .45; cursor: default; }
   .hp-bar-container { background: #e2e8f0; border-radius: 99px; height: 14px; width: 100%; overflow: hidden; margin: 6px 0; border: 2px solid #cbd5e1; }
   .hp-bar-fill { background: #22c55e; height: 100%; width: 100%; transition: width 0.3s ease; }
 
@@ -308,6 +309,7 @@
   @keyframes toy-float { 0%,100% { transform: translate3d(0,0,0) rotate(0); } 50% { transform: translate3d(0,-2px,0) rotate(5deg); } }
 
   #dopts { flex: 1; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-content: flex-start; padding: 4px 8px 16px; }
+  #bdeco { position: absolute; left: 50%; top: -2%; transform: translateX(-50%); font-size: min(4vh, 8vw); line-height: 1; pointer-events: none; }
   #dopts .pill.on { background: #fbbf24; }
   #dopts .sw { display: inline-block; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--primary); vertical-align: middle; margin-right: 5px; }
 </style>
@@ -335,6 +337,7 @@
       <div id="trainer" class="trainer" data-pose="idle"></div>
       <span id="buddywrap" class="bw" style="display:none">
         <img id="buddy" alt="">
+        <span id="bdeco"></span>
         <span id="btoy"></span>
       </span>
       <button id="nobuddy">⭐</button>
@@ -402,7 +405,7 @@
           <img id="battle-player-img" src="" alt="" style="width:50px; height:50px; object-fit:contain; display:block; margin:0 auto;">
         </div>
       </div>
-      <div id="battle-log" style="font-size:14px; font-weight:700; color:var(--primary); margin:10px 0; background:#f0f9ff; padding:10px; border-radius:12px; min-height:45px;">Gevecht gestart! Wees snel!</div>
+      <div id="battle-log" style="font-size:14px; font-weight:700; color:var(--primary); margin:10px 0; background:#f0f9ff; padding:10px; border-radius:12px; min-height:45px;">Jij begint! Kies een aanval.</div>
       <div id="battle-actions">
         <button class="battle-btn" id="atk-fast">⚡ Snelle Aanval</button>
         <button class="battle-btn" id="atk-charged" style="background:#fef08a; color:#854d0e;">💥 Krachtige Aanval</button>
@@ -413,9 +416,11 @@
     <div id="game-win" style="display:none;">
       <h3 style="color:#16a34a;">🎉 Gewonnen van Team Rocket!</h3>
       <p id="battle-win-msg" style="font-size:14px; margin:6px 0 12px; color:#4b5563;"></p>
+      <div id="win-rewards">
       <p style="font-size:15px; margin:4px 0;">Kies jouw beloning:</p>
       <button class="pill" id="rew-great" style="width:100%; margin:4px; background:#dbeafe; color:#1d4ed8;">🔵 5 Great Balls</button><br>
       <button class="pill" id="rew-mega" style="width:100%; margin:4px; background:#fce7f3; color:#db2777;">🎁 5 Super Balls</button>
+      </div>
     </div>
   </div>
 </div>
@@ -438,8 +443,9 @@
 <div class="layer" id="dress">
   <div class="bar"><h2>Mijn trainer</h2><button class="pill" id="dressclose">✔ Klaar</button></div>
   <div id="dpreview" class="trainer big-t" data-pose="idle"></div>
-  <div class="tabs" id="dtabs"><button class="pill on" data-k="outfit">👕 Outfit</button><button class="pill" data-k="hair">💇 Haar</button><button class="pill" data-k="toy">🧸 Speeltje</button><button class="pill" data-k="name">✏️ Naam</button></div>
+  <div class="tabs" id="dtabs"><button class="pill on" data-k="figure">🧒 Figuur</button><button class="pill" data-k="hair">💇 Haar</button><button class="pill" data-k="color">🎨 Haarkleur</button><button class="pill" data-k="outfit">👕 Outfit</button><button class="pill" data-k="ocolor">🧵 Kleur kleding</button><button class="pill" data-k="toy">🧸 Speeltje</button><button class="pill" data-k="deco">🎀 Versiering</button><button class="pill" data-k="name">✏️ Naam</button></div>
   <div id="dopts"></div>
+  <div style="text-align:center;font-size:11px;color:#6b7280;padding:4px 0 10px">versie 28-10 b gevecht in beurten</div>
 </div>
 
 <div class="layer" id="parent" style="background:#f3f4f6">
@@ -475,9 +481,11 @@
     skips: 0,
     totalCaughtCount: 0,
     claimedShinyMilestones: 0,
-    trainer: { outfit: 'ash', hair: 'kort', name: '' },
+    battleRewardDate: '',
+    trainer: { hair: 'kort', color: 'bruin', outfit: 'rood', ocolor: 'orig', name: '', figure: 'eigen' },
+    deco: 'geen',
     toy: 'geen',
-    buddy: null
+    buddy: null // { id, shiny } van een gevangen Pokémon
   };
 
   const refill = b => { const o = { ...b, poke: Infinity }; ['great', 'ultra', 'master'].forEach(k => o[k] = Math.max(+b[k] || 0, LIMITS[k])); o.mega = +b.mega || 0; return o; };
@@ -486,6 +494,7 @@
   function migrate(d) {
     d.shinies = d.shinies || {};
     d.trainer = { ...def.trainer, ...(d.trainer || {}) };
+    if (['ash', 'red', 'blue', 'rocket', 'bruno', 'cooltrainer'].includes(d.trainer.outfit)) { d.trainer.figure = d.trainer.outfit === 'rocket' ? 'eigen' : d.trainer.outfit; d.trainer.outfit = 'rood'; }
     d.totalCaughtCount = d.totalCaughtCount || Object.values(d.caught || {}).reduce((acc, x) => acc + (x.n || 0), 0) + Object.values(d.shinies || {}).reduce((acc, x) => acc + (x.n || 0), 0);
     d.claimedShinyMilestones = d.claimedShinyMilestones || 0;
     return d;
@@ -776,51 +785,80 @@
     }
   }
 
-  const OUTFITS = [
-    { id: 'ash', n: '🧢 Ash Ketchum', url: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/trainers/1.png' },
-    { id: 'red', n: '🔴 Trainer Red', url: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/trainers/2.png' },
-    { id: 'blue', n: '🔵 Champion Blue', url: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/trainers/3.png' },
-    { id: 'rocket', n: '🔴 Team Rocket', url: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/trainers/9.png' },
-    { id: 'bruno', n: '🥋 Karateka Bruno', url: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/trainers/10.png' },
-    { id: 'cooltrainer', n: '⭐ Cooltrainer', url: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/trainers/15.png' }
+  // ===== Trainer (PNG-laagjes) =====
+  // Bestanden in de map trainer/ (alle PNG's even groot, transparant, verhouding 2:3, bv. 800x1200):
+  //   base-{pose}.png            lichaam + gezicht per pose (idle, throw, happy, sad)
+  //   outfit-{id}-{pose}.png     kleding per pose
+  //   hair-{id}-back.png         haar achter het lichaam
+  //   hair-{id}-front.png        haar voor het lichaam (pony, zijkanten)
+  // Haarkleur wordt in de app gedaan (filter), dus teken het haar in één neutrale bruine kleur.
+  const POSES = ['idle', 'throw', 'happy', 'sad'];
+  const HAIRS = [{ id: 'kort', n: 'Kort' }, { id: 'staart', n: 'Staart' }, { id: 'los', n: 'Los' }, { id: 'staartjes', n: 'Staartjes' }];
+  const COLORS = [
+    { id: 'bruin', n: 'Bruin', c: '#7b4a2a', f: 'none' }, { id: 'zwart', n: 'Zwart', c: '#222', f: 'brightness(.4) saturate(.6)' },
+    { id: 'blond', n: 'Blond', c: '#f2c75c', f: 'sepia(.5) saturate(2.2) brightness(1.55)' }, { id: 'rood', n: 'Rood', c: '#d1432b', f: 'hue-rotate(-20deg) saturate(2.2) brightness(1.1)' },
+    { id: 'roze', n: 'Roze', c: '#ec6fb4', f: 'hue-rotate(285deg) saturate(2) brightness(1.3)' }, { id: 'blauw', n: 'Blauw', c: '#3b82f6', f: 'hue-rotate(185deg) saturate(2.2) brightness(1.2)' },
+    { id: 'paars', n: 'Paars', c: '#8b5cf6', f: 'grayscale(1) sepia(1) hue-rotate(242deg) saturate(3) brightness(1.5)' }, { id: 'groen', n: 'Groen', c: '#22c55e', f: 'grayscale(1) sepia(1) hue-rotate(87deg) saturate(3) brightness(1.4)' },
+    { id: 'turkoois', n: 'Turkoois', c: '#14b8a6', f: 'grayscale(1) sepia(1) hue-rotate(137deg) saturate(3) brightness(1.4)' }, { id: 'oranje', n: 'Oranje', c: '#f97316', f: 'grayscale(1) sepia(1) hue-rotate(350deg) saturate(3.5) brightness(1.5)' },
+    { id: 'wit', n: 'Wit', c: '#f3f4f6', f: 'grayscale(1) brightness(2.2)' }, { id: 'grijs', n: 'Grijs', c: '#9ca3af', f: 'grayscale(1) brightness(1.25)' }
   ];
-
+  const OUTFITS = [{ id: 'rood', n: '🔴 Avonturier' }, { id: 'blauw', n: '🔵 Sportief' }, { id: 'groen', n: '🟢 Ontdekker' }, { id: 'geel', n: '🟡 Regenjas' }];
+  // Kleur van de kleding: eerst grijs maken en dan inkleuren, zodat elke outfit dezelfde kleur krijgt (wit en zwart blijven licht en donker).
+  const tint = (h, b = 1.15) => `grayscale(1) sepia(1) hue-rotate(${h}deg) saturate(3) brightness(${b})`;
+  const OCOLORS = [
+    { id: 'orig', n: 'Zoals het is', c: 'conic-gradient(#ef4444, #eab308, #22c55e, #3b82f6, #ec4899, #ef4444)', f: 'none' },
+    { id: 'roze', n: 'Roze', c: '#ec4899', f: tint(292) }, { id: 'paars', n: 'Paars', c: '#8b5cf6', f: tint(242) }, { id: 'blauw', n: 'Blauw', c: '#3b82f6', f: tint(177) },
+    { id: 'turkoois', n: 'Turkoois', c: '#14b8a6', f: tint(137) }, { id: 'groen', n: 'Groen', c: '#22c55e', f: tint(87) }, { id: 'geel', n: 'Geel', c: '#eab308', f: tint(17) },
+    { id: 'oranje', n: 'Oranje', c: '#f97316', f: tint(350) }, { id: 'rood', n: 'Rood', c: '#ef4444', f: tint(322) },
+    { id: 'zwart', n: 'Zwart', c: '#1f2937', f: 'grayscale(1) brightness(.4)' }, { id: 'wit', n: 'Wit', c: '#f3f4f6', f: 'grayscale(1) brightness(1.7)' }
+  ];
+  const DECOS = [{ id: 'geen', n: 'Geen' }, { id: 'strik', n: 'Strik', e: '🎀' }, { id: 'kroon', n: 'Kroon', e: '👑' }, { id: 'hoed', n: 'Hoedje', e: '🎩' },
+    { id: 'bloem', n: 'Bloem', e: '🌸' }, { id: 'ster', n: 'Ster', e: '⭐' }, { id: 'pet', n: 'Pet', e: '🧢' }, { id: 'hart', n: 'Hartje', e: '❤️' }];
+  // Meer haarstijlen of outfits? Zet de PNG's in trainer/ en vermeld ze in trainer/manifest.json: { "hairs": [{ "id": "..", "n": ".." }], "outfits": [{ "id": "..", "n": ".." }] }
+  fetch('trainer/manifest.json').then(r => (r.ok ? r.json() : null)).then(m => {
+    if (!m) return;
+    [[HAIRS, m.hairs], [OUTFITS, m.outfits]].forEach(([arr, add]) => (add || []).forEach(o => { if (o && o.id && !arr.some(x => x.id === o.id)) arr.push({ id: String(o.id), n: String(o.n || o.id) }); }));
+    if ($('dress').classList.contains('on')) renderDress();
+  }).catch(() => {});
+  function renderDeco() { $('bdeco').textContent = (DECOS.find(d => d.id === S.deco) || DECOS[0]).e || ''; }
+  // Figuren uit de games als alternatief voor de eigen trainer (plaatjes van PokéAPI)
+  const TR = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/trainers/';
+  const FIGURES = [
+    { id: 'eigen', n: '🧒 Mijn eigen trainer' },
+    { id: 'ash', n: '🧢 Ash Ketchum', url: TR + '1.png' }, { id: 'red', n: '🔴 Trainer Red', url: TR + '2.png' },
+    { id: 'blue', n: '🔵 Champion Blue', url: TR + '3.png' }, { id: 'bruno', n: '🥋 Karateka Bruno', url: TR + '10.png' }, { id: 'cooltrainer', n: '⭐ Cooltrainer', url: TR + '15.png' }
+  ];
   const TOYS = [
-    { id: 'geen', n: 'Geen', e: '' }, 
-    { id: 'pokeball', n: 'Pokébal', e: '🔴' }, 
-    { id: 'tennisbal', n: 'Tennisbal', e: '🎾' }, 
-    { id: 'kussen', n: 'Kussen', e: '💤' },
-    { id: 'bessen', n: 'Oran Berry', e: '🍃' }, 
-    { id: 'knuffel', n: 'Ster', e: '⭐' }
+    { id: 'geen', n: 'Geen', e: '' }, { id: 'pokeball', n: 'Pokébal', e: '🔴' }, { id: 'tennisbal', n: 'Tennisbal', e: '🎾' },
+    { id: 'kussen', n: 'Kussen', e: '💤' }, { id: 'bessen', n: 'Oran Berry', e: '🍃' }, { id: 'knuffel', n: 'Ster', e: '⭐' }
   ];
+  function renderToy() { $('btoy').textContent = (TOYS.find(x => x.id === (S.toy || 'geen')) || TOYS[0]).e || ''; }
 
-  function renderToy() { 
-    const t = TOYS.find(x => x.id === (S.toy || 'geen')) || TOYS[0];
-    $('btoy').textContent = t.e || ''; 
-  }
-
-  function updateNames() {
+  function updateNames() { // naam van de trainer in de titels
     const n = (S.trainer.name || '').trim();
     const h = document.querySelector('#dex .bar h2'); if (h && h.firstChild) h.firstChild.textContent = (n ? 'Pokédex van ' + n : 'Mijn Pokédex') + ' ';
     const d = document.querySelector('#dress .bar h2'); if (d) d.textContent = n || 'Mijn trainer';
   }
-
-  function trainerHTML() {
-    const outfit = OUTFITS.find(o => o.id === S.trainer.outfit) || OUTFITS[0];
-    return `<img src="${outfit.url}" alt="Trainer" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/trainers/1.png'">`;
+  function trainerHTML(pose = 'idle', t = S.trainer) {
+    const fig = FIGURES.find(o => o.id === t.figure);
+    if (fig && fig.url) return `<img src="${fig.url}" alt="Trainer" style="width:100%;height:100%;object-fit:contain" onerror="this.src='${TR}1.png'">`;
+    const f = (COLORS.find(c => c.id === t.color) || COLORS[0]).f;
+    const L = (name, style = '', extra = '') => `<img src="trainer/${name}.png" alt="" style="${style}" onerror="this.style.display='none'" ${extra}>`;
+    return '<span class="tfb">🧒</span>'
+      + L(`hair-${t.hair}-back`, `filter:${f}`)
+      + L(`base-${pose}`, '', `onload="this.parentNode.querySelector('.tfb').style.display='none'"`)
+      + L(`outfit-${t.outfit}-${pose}`, `filter:${(OCOLORS.find(c => c.id === t.ocolor) || OCOLORS[0]).f}`)
+      + L(`hair-${t.hair}-front`, `filter:${f}`);
   }
 
   function renderBuddy() {
     const b = $('buddy'), nb = $('nobuddy'), w = $('buddywrap');
-    renderToy(); updateNames();
+    renderDeco(); renderToy(); updateNames();
     if (!S.buddy) { w.style.display = 'none'; nb.style.display = ''; return; }
     nb.style.display = 'none'; w.style.display = '';
     b.onerror = () => {
-      if (b.src.includes('official-artwork')) {
-        b.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${S.buddy.shiny ? 'shiny/' : ''}${S.buddy.id}.png`;
-      } else {
-        w.style.display = 'none'; nb.style.display = '';
-      }
+      if (b.src.includes('official-artwork')) b.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${S.buddy.shiny ? 'shiny/' : ''}${S.buddy.id}.png`;
+      else { w.style.display = 'none'; nb.style.display = ''; }
     };
     b.src = ART + (S.buddy.shiny ? 'shiny/' : '') + S.buddy.id + '.png';
   }
@@ -852,13 +890,13 @@
   function setPose(p, back) {
     clearTimeout(poseTimer);
     $('buddywrap').classList.toggle('hop', p === 'happy');
-    const el = $('trainer'); el.dataset.pose = p; el.innerHTML = trainerHTML();
+    const el = $('trainer'); el.dataset.pose = p; el.innerHTML = trainerHTML(p);
     if (back) poseTimer = setTimeout(() => setPose('idle'), back);
   }
 
-  let dtab = 'outfit';
+  let dtab = 'figure';
   function renderDress() {
-    $('dpreview').innerHTML = trainerHTML();
+    $('dpreview').innerHTML = trainerHTML('idle');
     document.querySelectorAll('#dtabs .pill').forEach(b => b.classList.toggle('on', b.dataset.k === dtab));
     if (dtab === 'name') {
       $('dopts').innerHTML = '<div style="width:100%;text-align:center"><input id="tname-in" maxlength="14" placeholder="Hoe heet je?" style="font-size:22px;padding:8px 12px;border-radius:12px;border:3px solid #1e3a8a;width:min(90%,260px);text-align:center"></div>';
@@ -866,20 +904,17 @@
       inp.oninput = () => { S.trainer.name = inp.value.slice(0, 14); save(); updateNames(); };
       return;
     }
-    const list = { outfit: OUTFITS, toy: TOYS }[dtab] || OUTFITS;
-    const curv = dtab === 'toy' ? (S.toy || 'geen') : S.trainer.outfit;
-    $('dopts').innerHTML = list.map(o => `<button class="pill ${curv === o.id ? 'on' : ''}" data-id="${o.id}">${o.e ? o.e + ' ' : ''}${o.n}</button>`).join('');
+    const list = { figure: FIGURES, hair: HAIRS, color: COLORS, outfit: OUTFITS, ocolor: OCOLORS, toy: TOYS, deco: DECOS }[dtab] || FIGURES;
+    const curv = dtab === 'toy' ? (S.toy || 'geen') : dtab === 'deco' ? S.deco : dtab === 'figure' ? (S.trainer.figure || 'eigen') : S.trainer[dtab];
+    const hint = ['hair', 'color', 'outfit', 'ocolor'].includes(dtab) && (S.trainer.figure || 'eigen') !== 'eigen'
+      ? '<div style="width:100%;text-align:center;font-size:15px;color:#6b7280;padding:4px 12px">Kies bij Figuur eerst "Mijn eigen trainer" om dit te zien.</div>' : '';
+    $('dopts').innerHTML = hint + list.map(o => `<button class="pill ${curv === o.id ? 'on' : ''}" data-id="${o.id}">${o.c ? `<span class="sw" style="background:${o.c}"></span>` : ''}${o.e ? o.e + ' ' : ''}${o.n}</button>`).join('');
   }
 
-  $('dopts').onclick = e => { 
-    const b = e.target.closest('[data-id]'); 
-    if (!b) return; 
-    if (dtab === 'toy') S.toy = b.dataset.id; 
-    else S.trainer.outfit = b.dataset.id; 
-    save(); 
-    renderDress(); 
-    renderToy(); 
-    setPose($('trainer').dataset.pose); 
+  $('dopts').onclick = e => {
+    const b = e.target.closest('[data-id]'); if (!b) return;
+    if (dtab === 'toy') S.toy = b.dataset.id; else if (dtab === 'deco') S.deco = b.dataset.id; else S.trainer[dtab] = b.dataset.id;
+    save(); renderDress(); renderDeco(); renderToy(); setPose($('trainer').dataset.pose);
   };
 
   $('dtabs').onclick = e => { const b = e.target.closest('[data-k]'); if (!b) return; dtab = b.dataset.k; renderDress(); };
@@ -887,7 +922,7 @@
   $('dressclose').onclick = () => { $('dress').classList.remove('on'); setPose('idle'); };
 
   // --- TEAM ROCKET BATTLE LOGIC (Met 5 Great Balls of 5 Super Balls als beloning) ---
-  let playerHp = 100, oppHp = 100;
+  let playerHp = 100, oppHp = 100, turn = 'over'; // turn: 'player' | 'ai' | 'over'
 
   $('gamebtn').onclick = () => {
     $('battle-notice').style.display = 'none';
@@ -897,8 +932,9 @@
     $('game-layer').classList.add('on');
   };
 
-  $('game-close').onclick = () => $('game-layer').classList.remove('on');
+  $('game-close').onclick = () => { turn = 'over'; $('game-layer').classList.remove('on'); };
   $('game-quit').onclick = () => {
+    turn = 'over';
     $('game-setup').style.display = 'block';
     $('game-play').style.display = 'none';
   };
@@ -906,6 +942,7 @@
   $('start-battle').onclick = () => {
     playerHp = 100;
     oppHp = 100;
+    turn = 'player'; setAttackButtons(true);
     updateHpBars();
     $('game-setup').style.display = 'none';
     $('game-play').style.display = 'block';
@@ -918,7 +955,7 @@
     }
 
     $('battle-opp-img').src = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/109.png';
-    $('battle-log').textContent = 'Team Rocket Grunt is krachtig! Val slim aan!';
+    $('battle-log').textContent = 'Team Rocket Grunt wil vechten! Jij mag beginnen.';
   };
 
   function updateHpBars() {
@@ -926,71 +963,68 @@
     $('opp-hp').style.width = Math.max(0, oppHp) + '%';
   }
 
-  $('atk-fast').onclick = () => {
-    if (playerHp <= 0 || oppHp <= 0) return;
-    sound('throw');
-    const dmgToOpp = Math.floor(Math.random() * 10) + 10;
-    oppHp -= dmgToOpp;
-    updateHpBars();
-    $('battle-log').textContent = `⚡ Je raakt Team Rocket voor ${dmgToOpp} schade!`;
-    checkBattleEnd();
-    if (oppHp > 0) setTimeout(aiAttack, 500);
-  };
+  const AI_DMG = [10, 16]; // schade van de tegenstander per beurt
+  const setAttackButtons = on => ['atk-fast', 'atk-charged'].forEach(id => { $(id).disabled = !on; });
 
-  $('atk-charged').onclick = () => {
-    if (playerHp <= 0 || oppHp <= 0) return;
-    sound('pling');
-    const critical = Math.random() < 0.35;
-    const dmgToOpp = critical ? 35 : 15;
-    oppHp -= dmgToOpp;
+  // Beurt voor beurt: pas als de tegenstander heeft aangevallen mag je weer.
+  function playerAttack(kind) {
+    if (turn !== 'player' || playerHp <= 0 || oppHp <= 0) return;
+    turn = 'ai'; setAttackButtons(false);
+    let msg;
+    if (kind === 'fast') { const d = 10 + Math.floor(Math.random() * 7); oppHp -= d; sound('throw'); msg = `Snelle aanval: ${d} schade!`; }
+    else if (Math.random() < 0.55) { const d = 22 + Math.floor(Math.random() * 11); oppHp -= d; sound('pling'); msg = `Krachtige aanval raak: ${d} schade!`; }
+    else { sound('miss'); msg = 'De krachtige aanval mist!'; }
     updateHpBars();
-    $('battle-log').textContent = critical ? `💥 KRITISCHE TREFFER! ${dmgToOpp} schade!` : `💥 Krachtige aanval deed ${dmgToOpp} schade!`;
-    checkBattleEnd();
-    if (oppHp > 0) setTimeout(aiAttack, 600);
-  };
+    $('battle-log').textContent = msg;
+    if (checkBattleEnd()) return;
+    setTimeout(aiAttack, 1100);
+  }
+  $('atk-fast').onclick = () => playerAttack('fast');
+  $('atk-charged').onclick = () => playerAttack('charged');
 
   function aiAttack() {
-    if (playerHp <= 0 || oppHp <= 0) return;
+    if (turn !== 'ai') return;
     sound('miss');
-    const dmgToPlayer = Math.floor(Math.random() * 18) + 16; 
-    playerHp -= dmgToPlayer;
-    updateHpBars();
-    $('battle-log').textContent = `🔴 Team Rocket deelt een harde klap uit van ${dmgToPlayer} schade!`;
-    checkBattleEnd();
+    const d = AI_DMG[0] + Math.floor(Math.random() * (AI_DMG[1] - AI_DMG[0] + 1));
+    playerHp -= d; updateHpBars();
+    $('battle-log').textContent = `Team Rocket Grunt valt aan: ${d} schade.`;
+    if (checkBattleEnd()) return;
+    turn = 'player'; setAttackButtons(true);
+    setTimeout(() => { if (turn === 'player') $('battle-log').textContent += ' Jouw beurt!'; }, 700);
   }
 
-  function checkBattleEnd() {
+  function checkBattleEnd() { // geeft true terug als het gevecht is afgelopen
     if (oppHp <= 0) {
-      sound('win');
-      confetti();
+      turn = 'over'; setAttackButtons(false); sound('win'); confetti();
+      const done = S.battleRewardDate === todayStr();
       $('game-play').style.display = 'none';
-      $('battle-win-msg').textContent = 'Knap gedaan! Je hebt Team Rocket verslagen.';
+      $('battle-win-msg').textContent = done ? 'Knap gedaan! Je beloning van vandaag heb je al gehad. Morgen kun je weer een beloning winnen.' : 'Knap gedaan! Je hebt Team Rocket verslagen.';
+      $('win-rewards').style.display = done ? 'none' : 'block';
       $('game-win').style.display = 'block';
-    } else if (playerHp <= 0) {
-      sound('flee');
-      $('battle-log').textContent = 'Je Pokémon is verslagen door Team Rocket...';
-      setTimeout(() => {
-        $('game-setup').style.display = 'block';
-        $('game-play').style.display = 'none';
-        const notice = $('battle-notice');
-        notice.textContent = 'Je hebt verloren! Probeer het nog eens met een sterkere strategie.';
-        notice.style.display = 'block';
-      }, 1500);
+      return true;
     }
+    if (playerHp <= 0) {
+      turn = 'over'; setAttackButtons(false); sound('flee');
+      $('battle-log').textContent = 'Je Pokémon is moe. Probeer het nog eens!';
+      setTimeout(() => {
+        $('game-setup').style.display = 'block'; $('game-play').style.display = 'none';
+        const notice = $('battle-notice'); notice.textContent = 'Dat ging net niet. Probeer het nog eens!'; notice.style.display = 'block';
+      }, 1500);
+      return true;
+    }
+    return false;
   }
 
-  // Beloningen na winst: 5 Great Balls of 5 Super Balls (mega)
-  $('rew-great').onclick = () => {
-    S.balls.great = (S.balls.great || 0) + 5;
+  // Beloning na winst: 5 Great Balls of 5 Super Balls, maar maar één keer per dag
+  function claimBattleReward(kind) {
+    if (S.battleRewardDate === todayStr()) return;
+    S.battleRewardDate = todayStr();
+    S.balls[kind] = (S.balls[kind] || 0) + 5;
     save(); updateBallUI();
     $('game-layer').classList.remove('on');
-  };
-
-  $('rew-mega').onclick = () => {
-    S.balls.mega = (S.balls.mega || 0) + 5;
-    save(); updateBallUI();
-    $('game-layer').classList.remove('on');
-  };
+  }
+  $('rew-great').onclick = () => claimBattleReward('great');
+  $('rew-mega').onclick = () => claimBattleReward('mega');
   // ----------------------------------------
 
   async function spawn() {
